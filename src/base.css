@@ -1,0 +1,304 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@200;400;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200");
+
+@font-face {
+  font-family: 'Minecraft';
+  src: url('./skinview3d/assets/minecraft.woff2') format('woff2');
+}
+
+:root {
+  --background-color: #212122;
+  --background-color-2: #353539;
+  --background-color-3: #111112;
+  --red-color: #FF0700;
+  --cyan-color: #00F4FF;
+  --blue-color: #0049FF;
+  --green-color: #007f00;
+  --orange-color: #FFAB00;
+  --disabled-color-1: #555555;
+  --disabled-color: #9f9f9f;
+
+  --description-color: #c2c2c2;
+  --text-normal: #dcddde;
+  --text-disabled: rgb(153, 155, 159);
+  --text-muted: rgb(118, 118, 118);
+  --text-link: #00aff4;
+
+
+  --inp-white-color: #ffffffd3;
+  --inp-caret-color: #ffffffbd;
+
+  /* Borders */
+  --border: #85858544;
+  --border-2: #3d3d3d;
+  --border-3: #101113;
+  --border-4: #29292d;
+
+  --blackened-screen-color: #00000060;
+  --box-shadow: -8px 7px 19px 0px #000;
+  --border-radius: 0.1875rem;
+  --border-radius-2: 1rem;
+  --font-normal: "Poppins", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  text-decoration: none;
+  outline: none;
+  user-select: none;
+  font-family: var(--font-normal);
+  border: none;
+  caret-color: var(--inp-caret-color);
+}
+
+.material-symbols-outlined {
+  font-variation-settings:
+    'FILL'0,
+    'wght'400,
+    'GRAD'0,
+    'opsz'48
+}
+
+body {
+  margin: 0;
+  background: var(--background-color);
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  font-family: var(--font-normal);
+  color: var(--text-normal);
+}
+
+button {
+  cursor: pointer;
+}
+
+.switch {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+  height: 32px;
+  min-height: 32px;
+  width: 52px;
+  min-width: 52px;
+  border-radius: 16px;
+  display: inline-block;
+  position: relative;
+  border: var(--border-2) solid 1px;
+  transition: all .2s ease;
+  margin: 0;
+}
+
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(44, 44, 44, .2);
+  transition: all .2s cubic-bezier(.5, .1, .75, 1.35);
+}
+
+.switch:checked {
+  background: rgb(0, 255, 21) !important;
+}
+
+.switch:checked::after {
+  transform: translatex(20px);
+  background: rgb(255, 255, 255);
+}
+
+.sw {
+  display: flex;
+  align-items: center;
+}
+
+input, .input {
+  background-color: var(--background-color2) !important;
+  border: var(--border-2) solid 1px;
+  border-radius: var(--border-radius);
+  padding: 0.25rem 0.75rem;
+  font-size: .9375rem;
+  line-height: 2;
+  color: var(--text-normal);
+}
+
+input.incorrect, .input.incorrect {
+  border-color: var(--red-color);
+}
+
+input:-webkit-autofill, input:autofill, input::-internal-autofill-selected, input:-internal-autofill-selected {
+  background-color: var(--background-color2) !important;
+  color: var(--text-normal);
+}
+
+textarea {
+  color: var(--text-normal);
+  background-color: transparent;
+  font-size: medium;
+  resize: none;
+  border: var(--border-2) solid 1px;
+  border-radius: var(--border-radius);
+  padding: 0.25rem 0.75rem;
+  font-size: .9375rem;
+  line-height: 2;
+}
+
+select {
+  color: var(--text-normal);
+  width: 100%;
+  background-color: var(--background-color2);
+  border: var(--border-2) solid 1px;
+  border-radius: 0.1875rem;
+  padding: 0.25rem 0.75rem 0.25rem 0.75rem;
+  font-size: .9375rem;
+  line-height: 2;
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type="datetime-local"] {
+  position: relative;
+}
+
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  color: transparent;
+  background: transparent;
+}
+
+button {
+  font-weight: 700;
+  display: inline-block;
+  text-align: center;
+  border: 0;
+  cursor: pointer;
+  border-radius: var(--border-radius);
+  position: relative;
+  line-height: 1;
+  transition: all .2s linear;
+  color: white;
+  background-color: var(--blue-color);
+  overflow: hidden;
+  color: transparent;
+  position: relative;
+}
+
+button::before {
+  content: attr(data-text);
+  position: absolute;
+  left: 0;
+  right: 0;
+  text-align: center;
+  letter-spacing: initial;
+  color: #fff;
+  transition: all 0.2s ease;
+}
+
+button.button-rounded {
+  border-radius: var(--border-radius-rounded);
+}
+
+.button-small {
+  font-size: 0.75rem;
+  padding: 0.625rem 1rem;
+}
+
+.button-medium {
+  font-size: 0.875rem;
+  padding: 0.688rem 1.25rem;
+}
+
+.button-large {
+  font-size: 1rem;
+  padding: 0.75rem 1.5rem;
+}
+
+button.color-red {
+  background-color: var(--red-color);
+}
+
+button.color-orange {
+  background-color: var(--orange-color);
+}
+
+button.color-yellow {
+  background-color: var(--yellow-color);
+  color: var(--color-1);
+}
+
+button.color-green {
+  background-color: var(--green-color);
+}
+
+button.color-blue {
+  background-color: var(--blue-color);
+}
+
+button.color-grey {
+  background-color: var(--grey-color);
+}
+
+button.button-disabled {
+  background-color: var(--disabled-color-1);
+  color: var(--disabled-color);
+  cursor: not-allowed;
+}
+
+button.button-disabled::before {
+  color: var(--disabled-color);
+}
+
+button.button-enabled:hover::before {
+  letter-spacing: .5px;
+}
+
+.ripple {
+  pointer-events: auto;
+}
+
+.vertical {
+  display: flex;
+  flex-direction: column;
+}
+
+.horizontal {
+  display: flex;
+  flex-direction: row;
+}
+
+.rounded {
+  border-radius: 50%;
+}
+
+
+
+
+
+
+
+
+
+
+@keyframes EntranceTop {
+	0% {
+		opacity: 0;
+		transform: translate(-50%, -250px);
+	}
+
+	100% {
+		opacity: 1;
+		transform: translateY(-50%, 0);
+	}
+}

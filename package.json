@@ -1,0 +1,20 @@
+{
+  "name": "mccitizens-launcher",
+  "version": "0.0.1",
+  "description": "A launcher for MCCitizens",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Hydix",
+  "license": "ISC",
+  "dependencies": {
+    "colors": "^1.4.0",
+    "electron": "^25.2.0",
+    "minecraft-launcher-core": "^3.17.3",
+    "msmc": "^4.1.0",
+    "net": "^1.0.2",
+    "skinview3d": "^3.0.0-alpha.1"
+  }
+}

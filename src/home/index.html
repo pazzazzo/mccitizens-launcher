@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>MCCitizens</title>
+</head>
+
+<body>
+    <div id="left-bar" class="vertical">
+        <div class="left-item"><img src="../assets/load/head_load.png" alt="" id="user-icon" class=""><div class="vertical" id="user-infos"><div id="user-name">Chargement</div><div id="user-account-type">Compte MCCitizens</div></div></div>
+        <div class="left-item activated"><img src="../assets/icons/minecraft.png" alt="" class="left-item-icon"><p>Minecraft</p></div>
+        <div class="left-item"><img src="../assets/icons/news.png" alt="" class="left-item-icon"><p>Journal</p></div>
+        <div class="left-item"><img src="../assets/icons/settings.png" alt="" class="left-item-icon"><p>Paramètres</p></div>
+    </div>
+    <div id="content" class="vertical">
+        <div id="backbround">
+            <img src="../assets/logo/title.png" alt="" id="title">
+        </div>
+        <div id="launch-bar" class="horizontal">
+            <div id="status">
+                <div class="status off">Server <span class="material-symbols-outlined">close</span></div>
+                <div class="status">Mojang <span class="material-symbols-outlined">check</span></div>
+            </div>
+            <button class="color-green button-normal button-enabled button-large play" id="play" data-text="Jouer">Jouer</button>
+            <canvas id="skin" height="200" width="150"></canvas>
+        </div>
+    </div>
+    <script src="../modules/skinview3d/bundles/skinview3d.bundle.js"></script>
+    <script src="./index.js"></script>
+</body>
+
+</html>
