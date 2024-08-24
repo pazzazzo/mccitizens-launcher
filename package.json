@@ -10,9 +10,10 @@
   "author": "Hydix",
   "license": "ISC",
   "dependencies": {
+    "axios": "^1.7.5",
     "colors": "^1.4.0",
     "electron": "^25.2.0",
-    "minecraft-launcher-core": "^3.17.3",
+    "minecraft-launcher-core": "^3.18.1",
     "msmc": "^4.1.0",
     "net": "^1.0.2",
     "skinview3d": "^3.0.0-alpha.1"

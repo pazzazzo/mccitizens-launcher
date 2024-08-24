@@ -127,3 +127,8 @@ dist
 .pnp.*
 
 jdk-17/
+
+.mccitizens/
+profile/
+token.json
+test.js

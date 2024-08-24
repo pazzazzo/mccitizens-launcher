@@ -1,13 +1,15 @@
 require("colors")
 const { app, BrowserWindow, ipcMain } = require('electron')
 const path = require('path')
-const { Client } = require("minecraft-launcher-core");
+const { Client } = require("minecraft-launcher-core"); //3.17.3
 const { Auth } = require("msmc");
 const fs = require("fs")
 const net = require('net')
 const os = require("os")
 const isDev = require("./isdev")
-const AppData = require("./appdata")
+const AppData = require("./appdata");
+const updateMods = require("./updateMods");
+let mainWindow;
 
 const data = JSON.parse(fs.readFileSync(__dirname + "/data.json").toString())
 function saveData() {
@@ -19,7 +21,7 @@ const authManager = new Auth("select_account");
 let xbox;
 
 const createWindow = () => {
-    const mainWindow = new BrowserWindow({
+    mainWindow = new BrowserWindow({
         width: 800,
         height: 600,
         minWidth: 1250,
@@ -51,7 +53,7 @@ ipcMain.on("auto_connect", (e) => {
     if (msAuthToken["access_token"] && msAuthToken["refresh_token"] && !xbox) {
         authManager.refresh(msAuthToken).then(async xboxManager => {
             let mc = await xboxManager.getMinecraft();
-            e.reply("connected", { "skin": mc.profile.skins[0].url, "cape": mc.profile.capes[0].url, "head": `https://mc-heads.net/head/${mc.profile.name}/left` }, { "username": mc.profile.name })
+            e.reply("connected", { "skin": mc.profile.skins[0].url, "cape": mc.profile.capes[0], "head": `https://mc-heads.net/head/${mc.profile.name}/left` }, { "username": mc.profile.name })
             xbox = xboxManager
         }).catch(r => {
             console.log(r);
@@ -110,6 +112,7 @@ ipcMain.handle("getServerStatus", (event, address, port = 25565) => {
                         onlinePlayers: server_info[4].replace(/\u0000/g, ''),
                         maxPlayers: server_info[5].replace(/\u0000/g, '')
                     })
+                    console.log(server_info);
                 } else {
                     resolve({
                         online: false
@@ -140,14 +143,24 @@ ipcMain.on("launch", async () => {
     }
     let token = await xbox.getMinecraft();
     console.log(`[MCCitizens] Client package ${data.installed ? "already" : "not"} installed`);
+    if (data.installed) {
+        if (mainWindow) {
+            mainWindow.webContents.send("mods.sync.start")
+        }
+        updateMods().then(success => {
+            if (mainWindow) {
+                mainWindow.webContents.send("mods.sync.end", success)
+            }
+        })
+    }
     let opts = {
-        clientPackage: data.installed ? null : "https://github.com/pazzazzo/mccitizens-clientpackage/releases/download/v0.0.0-alpha/clientpackage.zip",
+        clientPackage: data.installed ? null : "https://github.com/pazzazzo/mccitizens-clientpackage/releases/download/v0.0.1-alpha/clientpackage.zip",
         removePackage: true,
         // Simply call this function to convert the msmc Minecraft object into a mclc authorization object
         authorization: token.mclc(),
         root: rootPath(),
         version: {
-            number: "1.17.1",
+            number: "1.20.1",
             type: "release"
         },
         memory: {
@@ -155,9 +168,13 @@ ipcMain.on("launch", async () => {
             min: "4G"
         },
         forge: rootPath() + "/forge.jar",
+        jvmOptions: [
+            '-Djava.awt.headless=true'
+        ]
+
         // javaPath: "C:\\Program Files\\Java\\jdk-17\\bin\\java"
         // javaPath: process.env.JAVA_HOME + "\\bin\\java"
-        javaPath: __dirname + "/jdk-17/bin/java"
+        // javaPath: __dirname + "/jdk-17/bin/java"
     };
     console.log("Starting!");
     launcher.launch(opts);
@@ -182,9 +199,11 @@ launcher.on("download", (e) => {
 launcher.on("download-status", (e) => {
     console.log('[' + 'DOWNLOAD-STATUS'.cyan + '] ', e);
 
-    mainWindow && mainWindow.webContents.send("download.status", e)
+    if (mainWindow) {
+        mainWindow.webContents.send("download.status", e)
+    }
 })
 
 function rootPath() {
-    return isDev ? __dirname + "\\.mccitizens" : AppData + "\\.mccitizens"
+    return isDev ? __dirname + "/.mccitizens" : AppData + "/.mccitizens"
 }

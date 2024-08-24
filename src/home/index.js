@@ -2,6 +2,7 @@ electronAPI.autoConnect()
 
 let state = "disconnected"
 let playBtn = document.getElementById("play")
+let serverStatus = document.getElementById("status-server")
 
 playBtn.addEventListener("click", () => {
     if (state === "ready") {
@@ -34,13 +35,26 @@ electronAPI.onConnected((url, player) => {
     skinViewer.loadSkin(url.skin);
 
     // Load a cape
-    skinViewer.loadCape(url.cape);
+    if (url.cape) {
+        skinViewer.loadCape(url.cape);
+    }
 })
 electronAPI.onNotConnected(() => {
     location = "../login/index.html"
 })
 electronAPI.onDownloadStatus(() => {
     
+})
+
+electronAPI.getStatus("193.250.155.77").then(r => {
+    console.log(r);
+    if (r.online) {
+        serverStatus.classList.remove("off")
+        serverStatus.innerHTML = "check"
+    } else {
+        serverStatus.classList.add("off")
+        serverStatus.innerHTML = "close"
+    }
 })
 
 // let url = {

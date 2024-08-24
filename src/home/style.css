@@ -105,6 +105,6 @@
   color: var(--green-color);
 }
 
-.status.off>.material-symbols-outlined {
+.status>.material-symbols-outlined.off {
   color: var(--red-color);
 }
