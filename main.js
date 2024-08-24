@@ -1,7 +1,7 @@
 require("colors")
-const { app, BrowserWindow, ipcMain } = require('electron')
+const { app, BrowserWindow, ipcMain, dialog } = require('electron')
 const path = require('path')
-const { Client } = require("minecraft-launcher-core"); //3.17.3
+const { Client } = require("minecraft-launcher-core");
 const { Auth } = require("msmc");
 const fs = require("fs")
 const net = require('net')
@@ -9,6 +9,8 @@ const os = require("os")
 const isDev = require("./isdev")
 const AppData = require("./appdata");
 const updateMods = require("./updateMods");
+const { autoUpdater } = require('electron-updater');
+const rootPath = require("./rootPath");
 let mainWindow;
 
 const data = JSON.parse(fs.readFileSync(__dirname + "/data.json").toString())
@@ -32,9 +34,32 @@ const createWindow = () => {
         }
     })
 
-    mainWindow.loadFile('src/home/index.html')
+    mainWindow.loadFile(__dirname + '/src/home/index.html')
 
+    // Vérification des mises à jour
+    autoUpdater.checkForUpdatesAndNotify();
 }
+
+autoUpdater.on('update-available', () => {
+    dialog.showMessageBox({
+        type: 'info',
+        title: 'Mise à jour disponible',
+        message: 'Une nouvelle version est disponible. Elle sera téléchargée en arrière-plan.',
+    });
+});
+
+autoUpdater.on('update-downloaded', () => {
+    dialog.showMessageBox({
+        type: 'info',
+        title: 'Mise à jour prête',
+        message: 'Une nouvelle version a été téléchargée. Voulez-vous redémarrer pour l\'appliquer?',
+        buttons: ['Oui', 'Non'],
+    }).then((result) => {
+        if (result.response === 0) {
+            autoUpdater.quitAndInstall();
+        }
+    });
+});
 
 app.whenReady().then(() => {
     createWindow()
@@ -203,7 +228,3 @@ launcher.on("download-status", (e) => {
         mainWindow.webContents.send("download.status", e)
     }
 })
-
-function rootPath() {
-    return isDev ? __dirname + "/.mccitizens" : AppData + "/.mccitizens"
-}

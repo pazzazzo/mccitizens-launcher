@@ -1,10 +1,11 @@
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
+const rootPath = require('./rootPath');
 
 // URLs et chemins
 const GITHUB_API_URL = 'https://api.github.com/repos/pazzazzo/mccitizens-clientpackage/contents/mods';
-const LOCAL_MODS_DIR = path.join(__dirname, ".mccitizens", 'mods');
+const LOCAL_MODS_DIR = path.join(rootPath(), 'mods');
 
 // Fonction pour obtenir la liste des fichiers locaux
 function getLocalMods() {

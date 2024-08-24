@@ -5,17 +5,58 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dist": "electron-builder",
+    "dist-win": "electron-builder --win"
   },
-  "author": "Hydix",
+  "author": {
+    "name": "Hydix",
+    "url": "https://hydix.fr",
+    "email": "contact@hydix.fr"
+  },
   "license": "ISC",
   "dependencies": {
     "axios": "^1.7.5",
     "colors": "^1.4.0",
-    "electron": "^25.2.0",
+    "electron-updater": "^6.2.1",
     "minecraft-launcher-core": "^3.18.1",
     "msmc": "^4.1.0",
     "net": "^1.0.2",
     "skinview3d": "^3.0.0-alpha.1"
+  },
+  "build": {
+    "appId": "fr.hydix.mccitizens-launcher",
+    "productName": "MCCitizens Launcher",
+    "icon": "./src/assets/icons/minecraft.png",
+    "directories": {
+      "output": "dist"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "pazzazzo",
+        "repo": "mccitizens-launcher"
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "msi"
+      ]
+    },
+    "linux": {
+      "target": [
+        "deb"
+      ],
+      "category": "System"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "devDependencies": {
+    "electron": "^25.2.0",
+    "electron-builder": "^24.13.3"
   }
 }
