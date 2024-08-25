@@ -39,14 +39,13 @@
     <div id="content" class="vertical">
 
         <div class="container">
-            <!-- Card Component -->
             <div class="card">
                 <div class="card-header">
                     <h3>Java Settings</h3>
                     <p>Manage the Java configuration.</p>
                 </div>
                 <div class="card-content">
-                    <form>
+                    <div class="form">
                         <div class="form-group">
                             <label for="max-ram">Maximum RAM</label>
                             <input id="max-ram" step="1" min="2" max="16" type="number" placeholder="8.0G">
@@ -55,7 +54,7 @@
                             <label for="min-ram">Minimum RAM</label>
                             <input id="min-ram" step="1" min="2" max="16" type="number" placeholder="4.0G">
                         </div>
-                    </form>
+                    </div>
                 </div>
                 <div class="card-footer">
                     <button class="color-green button-normal button-enabled button-large" id="java-save"
@@ -63,34 +62,19 @@
                 </div>
             </div>
 
-            <!-- Repeat the same structure for other cards -->
-
-            <!-- Example of another card -->
             <div class="card">
                 <div class="card-header">
                     <h3>Profile</h3>
                     <p>Customize your Minecraft profile settings.</p>
                 </div>
                 <div class="card-content">
-                    <form>
-                        <!-- Skin, Cape, Elytra -->
+                    <div class="form">
                         <div class="form-group">
-                            <label for="skin">Skin</label>
-                            <div class="form-select">
-                                <span>Select skin</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
-                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round">
-                                    <path d="m6 9 6 6 6-6"></path>
-                                </svg>
-                            </div>
+                            <label for="import">Import Profile</label>
+                            <button class="color-blue button-normal button-enabled button-large" id="loadProfile"
+                                data-text="Import">Import</button>
                         </div>
-                        <!-- Add more form-groups as needed -->
-                    </form>
-                </div>
-                <div class="card-footer">
-                    <button class="color-green button-normal button-enabled button-large play" id=""
-                        data-text="Save">Save</button>
+                    </div>
                 </div>
             </div>
 
@@ -140,6 +124,8 @@
                 </div>
             </div>
         </div>
+    </div>
+    <div id="popup-container" class="popup-container">
     </div>
     <div id="version">0.0.0</div>
     <script src="../modules/skinview3d/bundles/skinview3d.bundle.js"></script>

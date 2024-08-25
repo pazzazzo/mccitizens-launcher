@@ -11,6 +11,7 @@ const updateMods = require("./updateMods");
 const { autoUpdater } = require('electron-updater');
 const rootPath = require("./rootPath");
 const Store = require('electron-store');
+const fs = require("fs")
 console.log(app.getPath('userData'));
 
 let mainWindow;
@@ -207,6 +208,76 @@ ipcMain.handle("java.option.get", (e) => {
     }
 })
 
+ipcMain.on("profile.load", (event) => {
+    dialog.showOpenDialog(mainWindow, {
+        properties: ['openDirectory', "showHiddenFiles"],
+        "buttonLabel": "Import",
+        "defaultPath": AppData + "/.modpack"
+    }).then(r => {
+        console.log(r);
+        let pth = r.filePaths[0]
+        if (pth) {
+            try {
+                if (fs.existsSync(pth + "/options.txt")) {
+                    if (!fs.existsSync(rootPath())) {
+                        fs.mkdirSync(rootPath(), { recursive: true });
+                    }
+                    function move(file) {
+                        if (fs.existsSync(pth + "/" + file)) {
+                            fs.copyFileSync(pth + "/" + file, rootPath() + "/" + file)
+                        }
+                    }
+                    function copyDirectory(src, dest) {
+                        console.log(src);
+
+                        if (!fs.existsSync(src)) {
+                            console.error(`Source directory ${src} does not exist.`);
+                            return;
+                        }
+
+                        if (!fs.existsSync(dest)) {
+                            fs.mkdirSync(dest, { recursive: true });
+                        }
+
+                        fs.readdirSync(src).forEach((item) => {
+                            const srcPath = path.join(src, item);
+                            const destPath = path.join(dest, item);
+
+                            if (fs.lstatSync(srcPath).isDirectory()) {
+                                copyDirectory(srcPath, destPath); // Recursively copy subdirectories
+                            } else {
+                                console.log(srcPath);
+
+                                fs.copyFileSync(srcPath, destPath); // Copy files
+                            }
+                        });
+                    }
+                    function copyDir(name) {
+                        const src = pth + "/" + name
+                        const dest = rootPath() + "/" + name
+                        copyDirectory(src, dest)
+                    }
+                    move("options.txt")
+                    copyDir("defaultconfigs")
+                    copyDir("XaeroWaypoints")
+                    move("optionsof.txt")
+                    copyDir("XaeroWorldMap")
+                    copyDir("resourcepacks")
+                    copyDir("shaderpacks")
+                    copyDir("schematics")
+                    copyDir("config")
+                    copyDir("saves")
+                    event.reply("profile.load.status", true)
+                } else {
+                    event.reply("profile.load.status", false, "Not a profile forlder")
+                }
+            } catch (error) {
+                event.reply("profile.load.status", false, error)
+            }
+        }
+    })
+})
+
 ipcMain.on("launch", async () => {
     if (!xbox) {
         return
@@ -237,10 +308,7 @@ ipcMain.on("launch", async () => {
             max: `${store.get("maxRam") || 12}G`,
             min: `${store.get("minRam") || 4}G`
         },
-        forge: rootPath() + "/forge.jar",
-        jvmOptions: [
-            '-Djava.awt.headless=true'
-        ]
+        forge: rootPath() + "/forge.jar"
 
         // javaPath: "C:\\Program Files\\Java\\jdk-17\\bin\\java"
         // javaPath: process.env.JAVA_HOME + "\\bin\\java"

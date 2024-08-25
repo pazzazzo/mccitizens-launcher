@@ -5,6 +5,7 @@ let load = document.getElementById("load")
 let maxRamInput = document.getElementById("max-ram")
 let minRamInput = document.getElementById("min-ram")
 let javaSaveBtn = document.getElementById("java-save")
+let loadProfileBtn = document.getElementById("loadProfile")
 
 electronAPI.getMemory().then(m => {
     m = Math.floor(Number(m.total)/10**9)
@@ -20,6 +21,23 @@ electronAPI.getJavaOption().then(o => {
     minRamInput.value = o.minRam
 })
 
+loadProfileBtn.addEventListener("click", () => {
+    if (!loadProfileBtn.classList.contains("button-enabled")) {
+        return
+    }
+    electronAPI.loadProfile()
+    loadProfileBtn.classList.remove("button-enabled")
+    loadProfileBtn.classList.add("button-disabled")
+})
+electronAPI.onLoadProfileStatus((success, r) => {
+    if (success) {
+        loadProfileBtn.classList.add("button-enabled")
+        loadProfileBtn.classList.remove("button-disabled")
+        popup.info("Profile importé avec succès")
+    } else {
+        popup.error("Profile non importé")
+    }
+})
 function correctInput(e) {
     if (Number(e.target.value) < 2) {
         e.target.value = 2
