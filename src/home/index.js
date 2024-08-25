@@ -5,6 +5,11 @@ let playBtn = document.getElementById("play")
 let serverStatus = document.getElementById("status-server")
 let load = document.getElementById("load")
 let title = document.getElementById("title")
+let startPopup = document.getElementById("start-popup")
+let progressText = document.getElementById("progress-text")
+let progressTask = document.getElementById("progress-task")
+let progressBar = document.getElementById("progress-bar")
+let progressPercent = document.getElementById("progress-percent")
 
 playBtn.addEventListener("click", () => {
     if (state === "ready") {
@@ -12,6 +17,7 @@ playBtn.addEventListener("click", () => {
         playBtn.classList.remove("button-enabled")
         playBtn.classList.add("button-disabled")
         electronAPI.launch()
+        startPopup.classList.remove("hidden")
     }
 })
 
@@ -46,8 +52,14 @@ electronAPI.onConnected((url, player) => {
 electronAPI.onNotConnected(() => {
     location = "../login/index.html"
 })
-electronAPI.onDownloadStatus(() => {
-    
+electronAPI.onDownloadStatus((e) => {
+    progressBar.style.width = `${Math.floor(e.current/e.total*100)}%`
+    progressText.innerText = `File: ${e.name} extracting..`
+})
+
+electronAPI.onProgressStatus((e) => {
+    progressPercent.innerText = Math.floor(e.task/e.total*100)
+    progressTask.innerText = `Task: ${e.type}`
 })
 
 electronAPI.getStatus("193.250.155.77").then(r => {

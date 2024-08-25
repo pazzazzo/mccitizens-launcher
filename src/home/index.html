@@ -19,21 +19,57 @@
         </div>
     </div>
     <div id="left-bar" class="vertical">
-        <div class="left-item"><img src="../assets/load/head_load.png" alt="" id="user-icon" class=""><div class="vertical" id="user-infos"><div id="user-name">Chargement</div><div id="user-account-type">Compte MCCitizens</div></div></div>
-        <div class="left-item activated"><img src="../assets/icons/minecraft.png" alt="" class="left-item-icon"><p>Minecraft</p></div>
-        <div class="left-item"><img src="../assets/icons/news.png" alt="" class="left-item-icon"><p>Journal</p></div>
-        <div class="left-item"><a href="../settings/index.html"><img src="../assets/icons/settings.png" alt="" class="left-item-icon"><p>Paramètres</p></a></div>
+        <div class="left-item"><img src="../assets/load/head_load.png" alt="" id="user-icon" class="">
+            <div class="vertical" id="user-infos">
+                <div id="user-name">Chargement</div>
+                <div id="user-account-type">Compte MCCitizens</div>
+            </div>
+        </div>
+        <div class="left-item activated"><img src="../assets/icons/minecraft.png" alt="" class="left-item-icon">
+            <p>Minecraft</p>
+        </div>
+        <div class="left-item"><img src="../assets/icons/news.png" alt="" class="left-item-icon">
+            <p>Journal</p>
+        </div>
+        <div class="left-item"><a href="../settings/index.html"><img src="../assets/icons/settings.png" alt=""
+                    class="left-item-icon">
+                <p>Paramètres</p>
+            </a></div>
     </div>
     <div id="content" class="vertical">
         <div id="backbround">
             <img src="../assets/logo/title.png" alt="" id="title">
+            <div id="start-popup" class="card hidden">
+                <div class="card-header">
+                    <h3>Progress</h3>
+                    <svg stroke-width="2" stroke="currentColor" viewBox="0 0 24 24" fill="none" class="icon"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linejoin="round"
+                            stroke-linecap="round"></path>
+                    </svg>
+                </div>
+                <div class="card-body">
+                    <p class="progress-text" id="progress-task">
+                        Task: download
+                    </p>
+                    <span class="progress-status"><span id="progress-percent">0</span>% Complete</span>
+                    <p class="progress-text" id="progress-text">
+                        File: ? extracting..
+                    </p>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
         </div>
         <div id="launch-bar" class="horizontal">
             <div id="status">
-                <div class="status">Server <span id="status-server" class="material-symbols-outlined off">close</span></div>
+                <div class="status">Server <span id="status-server" class="material-symbols-outlined off">close</span>
+                </div>
                 <div class="status">Mojang <span id="status-mojang" class="material-symbols-outlined">check</span></div>
             </div>
-            <button class="color-green button-normal button-enabled button-large play" id="play" data-text="Jouer">Jouer</button>
+            <button class="color-green button-normal button-enabled button-large play" id="play"
+                data-text="Jouer">Jouer</button>
             <canvas id="skin" height="200" width="150"></canvas>
         </div>
     </div>

@@ -24,10 +24,10 @@ let xbox;
 
 const createWindow = () => {
     mainWindow = new BrowserWindow({
-        width: 800,
-        height: 600,
-        minWidth: 1250,
-        minHeight: 758,
+        minWidth: 800,
+        minHeight: 600,
+        width: 1250,
+        height: 758,
         autoHideMenuBar: true,
         webPreferences: {
             preload: path.join(__dirname, "src", 'preload.js'),
@@ -283,8 +283,8 @@ ipcMain.on("launch", async () => {
         return
     }
     let token = await xbox.getMinecraft();
-    console.log(`[MCCitizens] Client package ${(store.has("installed") && store.get("installed")) ? "already" : "not"} installed`);
-    if (store.has("installed") && store.get("installed")) {
+    console.log(`[MCCitizens] Client package ${(fs.existsSync(rootPath()) && store.has("installed") && store.get("installed")) ? "already" : "not"} installed`);
+    if (fs.existsSync(rootPath()) && store.has("installed") && store.get("installed")) {
         if (mainWindow) {
             mainWindow.webContents.send("mods.sync.start")
         }
@@ -295,7 +295,7 @@ ipcMain.on("launch", async () => {
         })
     }
     let opts = {
-        clientPackage: (store.has("installed") && store.get("installed")) ? null : "https://github.com/pazzazzo/mccitizens-clientpackage/releases/download/v0.0.1-alpha/clientpackage.zip",
+        clientPackage: (fs.existsSync(rootPath()) && store.has("installed") && store.get("installed")) ? null : "https://github.com/pazzazzo/mccitizens-clientpackage/releases/download/v0.0.1-alpha/clientpackage.zip",
         removePackage: true,
         // Simply call this function to convert the msmc Minecraft object into a mclc authorization object
         authorization: token.mclc(),
@@ -318,24 +318,32 @@ ipcMain.on("launch", async () => {
     launcher.launch(opts);
 })
 
-launcher.on('debug', (e) => console.log("[" + "DEGUB".cyan + "] " + e));
+launcher.on('debug', (e) => {
+    console.log("[" + "DEGUB".cyan + "] " + e)
+    if (e.indexOf("Downloaded assets") >= 0) {
+        app.quit()
+    }
+});
 launcher.on('data', (e) => console.log("[" + "DATA".green + "] " + e));
 launcher.on("close", (c) => {
     console.log(`minecraft exit (${c})`);
 })
 launcher.on("progress", (e) => {
-    console.log('[' + 'PROGRESS'.yellow + '] ', e);
+    console.log('[' + 'PROGRESS'.yellow + '] ', e); //task/total
+
+    if (mainWindow) {
+        mainWindow.webContents.send("progress.status", e)
+    }
 })
 launcher.on("package-extract", (e) => {
     store.set("installed", true)
-    saveData()
     console.log('[' + 'PACKAGE EXTRACTED'.green + ']');
 })
 launcher.on("download", (e) => {
     console.log('[' + 'DOWNLOAD'.magenta + '] ', e);
 })
 launcher.on("download-status", (e) => {
-    console.log('[' + 'DOWNLOAD-STATUS'.cyan + '] ', e);
+    console.log('[' + 'DOWNLOAD-STATUS'.cyan + '] ', e); //current/total - name
 
     if (mainWindow) {
         mainWindow.webContents.send("download.status", e)
