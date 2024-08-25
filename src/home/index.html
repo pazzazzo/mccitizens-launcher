@@ -9,11 +9,20 @@
 </head>
 
 <body>
+    <div class="load" id="load">
+        <div class="loadingspinner">
+            <div id="square1"></div>
+            <div id="square2"></div>
+            <div id="square3"></div>
+            <div id="square4"></div>
+            <div id="square5"></div>
+        </div>
+    </div>
     <div id="left-bar" class="vertical">
         <div class="left-item"><img src="../assets/load/head_load.png" alt="" id="user-icon" class=""><div class="vertical" id="user-infos"><div id="user-name">Chargement</div><div id="user-account-type">Compte MCCitizens</div></div></div>
         <div class="left-item activated"><img src="../assets/icons/minecraft.png" alt="" class="left-item-icon"><p>Minecraft</p></div>
         <div class="left-item"><img src="../assets/icons/news.png" alt="" class="left-item-icon"><p>Journal</p></div>
-        <div class="left-item"><img src="../assets/icons/settings.png" alt="" class="left-item-icon"><p>Paramètres</p></div>
+        <div class="left-item"><a href="../settings/index.html"><img src="../assets/icons/settings.png" alt="" class="left-item-icon"><p>Paramètres</p></a></div>
     </div>
     <div id="content" class="vertical">
         <div id="backbround">
@@ -28,6 +37,7 @@
             <canvas id="skin" height="200" width="150"></canvas>
         </div>
     </div>
+    <div id="version">0.0.0</div>
     <script src="../modules/skinview3d/bundles/skinview3d.bundle.js"></script>
     <script src="./index.js"></script>
 </body>

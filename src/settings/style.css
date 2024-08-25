@@ -1,0 +1,151 @@
+@import url("../base.css");
+
+
+:root {
+  --card-bg: #2b2b2b;
+  --border-color: #333;
+  --text-color: #aaa;
+  --input-bg: #1e1e1e;
+  --input-border: #333;
+  --button-hover-text: #fff;
+}
+
+.remove-mod {
+  margin-left: auto;
+}
+
+#left-bar {
+  border-right: 1px solid var(--border-2);
+}
+
+#content {
+  width: calc(100vw - 200px);
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #1e1e1e;
+  color: #aaa;
+  margin: 0;
+  padding: 0;
+  max-height: 100vh;
+}
+
+.container {
+  padding: 24px;
+  overflow-y: scroll;
+}
+
+.card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+}
+
+.card-header {
+  padding: 24px;
+}
+
+.card-header h3 {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--text-color);
+  margin: 0;
+}
+
+.card-header p {
+  font-size: 14px;
+  color: var(--text-color);
+  margin: 8px 0 0;
+}
+
+.card-content {
+  padding: 24px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-color);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.form-group input {
+  height: 40px;
+  width: 100%;
+  border-radius: 4px;
+  border: 1px solid var(--input-border);
+  padding: 0 12px;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.form-group input::placeholder {
+  color: #888;
+}
+
+.card-footer {
+  border-top: 1px solid var(--border-color);
+  padding: 24px;
+  text-align: right;
+}
+
+.form-select {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 4px;
+  border: 1px solid var(--input-border);
+  background-color: var(--input-bg);
+  color: var(--text-color);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.form-select svg {
+  margin-left: 8px;
+  opacity: 0.5;
+}
+
+.mod-item {
+  display: flex;
+  align-items: center;
+  background-color: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  padding: 8px;
+  margin-bottom: 8px;
+}
+
+.mod-item img {
+  border-radius: 4px;
+}
+
+.mod-item .mod-info {
+  margin-left: 8px;
+}
+
+.mod-item .mod-info .mod-name {
+  font-weight: 500;
+}
+
+.mod-item .mod-info .mod-version {
+  font-size: 12px;
+}
+
+.mod-item .button-small {
+  width: 40px;
+  height: 40px;
+  font-size: 14px;
+}

@@ -1,9 +1,8 @@
 require("colors")
-const { app, BrowserWindow, ipcMain, dialog } = require('electron')
+const { app, BrowserWindow, ipcMain, dialog, Notification } = require('electron')
 const path = require('path')
 const { Client } = require("minecraft-launcher-core");
 const { Auth } = require("msmc");
-const fs = require("fs")
 const net = require('net')
 const os = require("os")
 const isDev = require("./isdev")
@@ -11,12 +10,12 @@ const AppData = require("./appdata");
 const updateMods = require("./updateMods");
 const { autoUpdater } = require('electron-updater');
 const rootPath = require("./rootPath");
-let mainWindow;
+const Store = require('electron-store');
+console.log(app.getPath('userData'));
 
-const data = JSON.parse(fs.readFileSync(__dirname + "/data.json").toString())
-function saveData() {
-    fs.writeFileSync(__dirname + "/data.json", JSON.stringify(data))
-}
+let mainWindow;
+let profile;
+let store = new Store()
 
 const launcher = new Client();
 const authManager = new Auth("select_account");
@@ -43,33 +42,34 @@ const createWindow = () => {
 autoUpdater.on('update-available', () => {
     console.log("Update");
 
-    dialog.showMessageBox({
-        type: 'info',
-        title: 'Mise à jour disponible',
-        message: 'Une nouvelle version est disponible. Elle sera téléchargée en arrière-plan.',
-    });
+    // dialog.showMessageBox({
+    //     type: 'info',
+    //     title: 'Mise à jour disponible',
+    //     message: 'Une nouvelle version est disponible. Elle sera téléchargée en arrière-plan.',
+    // });
+    new Notification({
+        title: 'MCCitizens Launcher',
+        body: 'Nouvelle mise à jour disponible.',
+    }).show();
 });
 
 autoUpdater.on('update-not-available', () => {
     console.log("no update");
-
 });
 
 autoUpdater.on("checking-for-update", () => {
     console.log("check");
-    
 })
 
 autoUpdater.on('error', (error) => {
     console.log(error);
-
 });
 
 autoUpdater.on('update-downloaded', () => {
     dialog.showMessageBox({
         type: 'info',
         title: 'Mise à jour prête',
-        message: 'Une nouvelle version a été téléchargée. Voulez-vous redémarrer pour l\'appliquer?',
+        message: "Une nouvelle version a été téléchargée. Voulez-vous redémarrer l'application maintenant?",
         buttons: ['Oui', 'Non'],
     }).then((result) => {
         if (result.response === 0) {
@@ -80,7 +80,6 @@ autoUpdater.on('update-downloaded', () => {
 
 app.whenReady().then(() => {
     createWindow()
-
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) createWindow()
     })
@@ -91,18 +90,24 @@ app.on('window-all-closed', () => {
 })
 
 ipcMain.on("auto_connect", (e) => {
-    let msAuthToken = JSON.parse(fs.readFileSync(__dirname + "/token.json").toString())
-    if (msAuthToken["access_token"] && msAuthToken["refresh_token"] && !xbox) {
+    let msAuthToken = store.get("token")
+    if (store.has("token") && msAuthToken["access_token"] && msAuthToken["refresh_token"] && !xbox) {
         authManager.refresh(msAuthToken).then(async xboxManager => {
             let mc = await xboxManager.getMinecraft();
-            e.reply("connected", { "skin": mc.profile.skins[0].url, "cape": mc.profile.capes[0], "head": `https://mc-heads.net/head/${mc.profile.name}/left` }, { "username": mc.profile.name })
+            profile = mc.profile
+            e.reply("connected", { "skin": profile.skins[0].url, "cape": profile.capes[0]?.url, "head": `https://mc-heads.net/head/${profile.name}/left` }, { "username": profile.name })
             xbox = xboxManager
         }).catch(r => {
             console.log(r);
         })
+    } else if (profile) {
+        e.reply("connected", { "skin": profile.skins[0].url, "cape": profile.capes[0]?.url, "head": `https://mc-heads.net/head/${profile.name}/left` }, { "username": profile.name })
     } else if (xbox) {
         xbox.getMinecraft().then(mc => {
-            e.reply("connected", { "skin": mc.profile.skins[0].url, "cape": mc.profile.capes[0].url, "head": `https://mc-heads.net/head/${mc.profile.name}/left` }, { "username": mc.profile.name })
+            profile = mc.profile
+            e.reply("connected", { "skin": profile.skins[0].url, "cape": profile.capes[0]?.url, "head": `https://mc-heads.net/head/${profile.name}/left` }, { "username": profile.name })
+        }).catch(e => {
+            console.log(e);
         })
     } else {
         e.reply("not_connected")
@@ -110,17 +115,22 @@ ipcMain.on("auto_connect", (e) => {
 })
 
 ipcMain.on("connect", (e) => {
-    let msAuthToken = JSON.parse(fs.readFileSync(__dirname + "/token.json").toString())
+    let msAuthToken = store.get("token") || {}
     authManager.launch("raw").then(async xboxManager => {
         msAuthToken["access_token"] = xboxManager.msToken.access_token
         msAuthToken["refresh_token"] = xboxManager.msToken.refresh_token
-        fs.writeFileSync(__dirname + "/token.json", JSON.stringify(msAuthToken))
+        store.set("token", msAuthToken)
         let mc = await xboxManager.getMinecraft();
-        e.reply("connected", { "skin": mc.profile.skins[0].url, "cape": mc.profile.capes[0].url, "head": `https://mc-heads.net/head/${mc.profile.name}/left` }, { "username": mc.profile.name })
+        profile = mc.profile
+        e.reply("connected", { "skin": profile.skins[0].url, "cape": profile.capes[0]?.url, "head": `https://mc-heads.net/head/${profile.name}/left` }, { "username": profile.name })
         xbox = xboxManager
     }).catch(r => {
         console.log(r);
     })
+})
+ipcMain.on("reset", (e) => {
+    store.clear()
+    app.quit()
 })
 ipcMain.handle("getServerStatus", (event, address, port = 25565) => {
     if (port == null || port == '') {
@@ -178,14 +188,32 @@ ipcMain.handle("getMemory", (e) => {
         "free": os.freemem()
     }
 })
+ipcMain.handle("getVersion", async (e) => {
+    return await app.getVersion()
+})
+
+ipcMain.on("java.option.set", (event, config) => {
+    if (config.maxRam) {
+        store.set("maxRam", config.maxRam)
+    }
+    if (config.minRam) {
+        store.set("minRam", config.minRam)
+    }
+})
+ipcMain.handle("java.option.get", (e) => {
+    return {
+        "maxRam": store.get("maxRam") || 12,
+        "minRam": store.get("minRam") || 4,
+    }
+})
 
 ipcMain.on("launch", async () => {
     if (!xbox) {
         return
     }
     let token = await xbox.getMinecraft();
-    console.log(`[MCCitizens] Client package ${data.installed ? "already" : "not"} installed`);
-    if (data.installed) {
+    console.log(`[MCCitizens] Client package ${(store.has("installed") && store.get("installed")) ? "already" : "not"} installed`);
+    if (store.has("installed") && store.get("installed")) {
         if (mainWindow) {
             mainWindow.webContents.send("mods.sync.start")
         }
@@ -196,7 +224,7 @@ ipcMain.on("launch", async () => {
         })
     }
     let opts = {
-        clientPackage: data.installed ? null : "https://github.com/pazzazzo/mccitizens-clientpackage/releases/download/v0.0.1-alpha/clientpackage.zip",
+        clientPackage: (store.has("installed") && store.get("installed")) ? null : "https://github.com/pazzazzo/mccitizens-clientpackage/releases/download/v0.0.1-alpha/clientpackage.zip",
         removePackage: true,
         // Simply call this function to convert the msmc Minecraft object into a mclc authorization object
         authorization: token.mclc(),
@@ -206,8 +234,8 @@ ipcMain.on("launch", async () => {
             type: "release"
         },
         memory: {
-            max: "12G",
-            min: "4G"
+            max: `${store.get("maxRam") || 12}G`,
+            min: `${store.get("minRam") || 4}G`
         },
         forge: rootPath() + "/forge.jar",
         jvmOptions: [
@@ -231,7 +259,7 @@ launcher.on("progress", (e) => {
     console.log('[' + 'PROGRESS'.yellow + '] ', e);
 })
 launcher.on("package-extract", (e) => {
-    data.installed = true
+    store.set("installed", true)
     saveData()
     console.log('[' + 'PACKAGE EXTRACTED'.green + ']');
 })

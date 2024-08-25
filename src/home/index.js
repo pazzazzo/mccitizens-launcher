@@ -3,6 +3,8 @@ electronAPI.autoConnect()
 let state = "disconnected"
 let playBtn = document.getElementById("play")
 let serverStatus = document.getElementById("status-server")
+let load = document.getElementById("load")
+let title = document.getElementById("title")
 
 playBtn.addEventListener("click", () => {
     if (state === "ready") {
@@ -38,6 +40,8 @@ electronAPI.onConnected((url, player) => {
     if (url.cape) {
         skinViewer.loadCape(url.cape);
     }
+    load.classList.add("hidden")
+    title.classList.add("ready")
 })
 electronAPI.onNotConnected(() => {
     location = "../login/index.html"
@@ -56,25 +60,3 @@ electronAPI.getStatus("193.250.155.77").then(r => {
         serverStatus.innerHTML = "close"
     }
 })
-
-// let url = {
-//     skin: 'http://textures.minecraft.net/texture/9c5dd4f0347b4db27a4affc5cb85c96d31c486c9f1d0c6ca535118a16b45cdab',
-//     cape: 'http://textures.minecraft.net/texture/f9a76537647989f9a0b6d001e320dac591c359e9e61a31f4ce11c88f207f0ad4'
-// }
-
-// let skinViewer = new skinview3d.SkinViewer({
-//     canvas: document.getElementById("skin_container"),
-//     width: 300,
-//     height: 400,
-//     skin: "img/skin.png"
-// });
-
-// // Change viewer size
-// skinViewer.width = 600;
-// skinViewer.height = 800;
-
-// // Load another skin
-// skinViewer.loadSkin(url.skin);
-
-// // Load a cape
-// skinViewer.loadCape(url.cape); 

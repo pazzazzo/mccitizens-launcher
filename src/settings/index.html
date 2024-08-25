@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>MCCitizens</title>
+</head>
+
+<body>
+    <div class="load" id="load">
+        <div class="loadingspinner">
+            <div id="square1"></div>
+            <div id="square2"></div>
+            <div id="square3"></div>
+            <div id="square4"></div>
+            <div id="square5"></div>
+        </div>
+    </div>
+    <div id="left-bar" class="vertical">
+        <div class="left-item"><img src="../assets/load/head_load.png" alt="" id="user-icon" class="">
+            <div class="vertical" id="user-infos">
+                <div id="user-name">Chargement</div>
+                <div id="user-account-type">Compte MCCitizens</div>
+            </div>
+        </div>
+        <div class="left-item"><a href="../home/index.html"><img src="../assets/icons/minecraft.png" alt=""
+                    class="left-item-icon">
+                <p>Minecraft</p>
+            </a></div>
+        <div class="left-item"><img src="../assets/icons/news.png" alt="" class="left-item-icon">
+            <p>Journal</p>
+        </div>
+        <div class="left-item activated"><img src="../assets/icons/settings.png" alt="" class="left-item-icon">
+            <p>Paramètres</p>
+        </div>
+    </div>
+    <div id="content" class="vertical">
+
+        <div class="container">
+            <!-- Card Component -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Java Settings</h3>
+                    <p>Manage the Java configuration.</p>
+                </div>
+                <div class="card-content">
+                    <form>
+                        <div class="form-group">
+                            <label for="max-ram">Maximum RAM</label>
+                            <input id="max-ram" step="1" min="2" max="16" type="number" placeholder="8.0G">
+                        </div>
+                        <div class="form-group">
+                            <label for="min-ram">Minimum RAM</label>
+                            <input id="min-ram" step="1" min="2" max="16" type="number" placeholder="4.0G">
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer">
+                    <button class="color-green button-normal button-enabled button-large" id="java-save"
+                        data-text="Save">Save</button>
+                </div>
+            </div>
+
+            <!-- Repeat the same structure for other cards -->
+
+            <!-- Example of another card -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Profile</h3>
+                    <p>Customize your Minecraft profile settings.</p>
+                </div>
+                <div class="card-content">
+                    <form>
+                        <!-- Skin, Cape, Elytra -->
+                        <div class="form-group">
+                            <label for="skin">Skin</label>
+                            <div class="form-select">
+                                <span>Select skin</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="m6 9 6 6 6-6"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        <!-- Add more form-groups as needed -->
+                    </form>
+                </div>
+                <div class="card-footer">
+                    <button class="color-green button-normal button-enabled button-large play" id=""
+                        data-text="Save">Save</button>
+                </div>
+            </div>
+
+            <!-- Example for mods -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Mods</h3>
+                    <p>Manage your Minecraft mods.</p>
+                </div>
+                <div class="card-content">
+                    <div class="form-group">
+                        <label for="installed-mods">Installed Mods</label>
+                        <div>
+                            <div class="mod-item">
+                                <img src="../assets/images/placeholder.svg" width="32" height="32" alt="Mod Icon">
+                                <div class="mod-info">
+                                    <div class="mod-name">Mod 1</div>
+                                    <div class="mod-version">v1.0.0</div>
+                                </div>
+                                <button class="color-red button-normal button-enabled button-large remove-mod" id="reset"
+                                    data-text="Remove">Remove</button>
+                            </div>
+                            <div class="mod-item">
+                                <img src="../assets/images/placeholder.svg" width="32" height="32" alt="Mod Icon">
+                                <div class="mod-info">
+                                    <div class="mod-name">Mod 2</div>
+                                    <div class="mod-version">v2.0.0</div>
+                                </div>
+                                <button class="color-red button-normal button-enabled button-large remove-mod" id="reset"
+                                    data-text="Remove">Remove</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="mod-order">Mod Order</label>
+                        <div>
+                            <button class="color-blue button-normal button-enabled button-large" id=""
+                                data-text="Move Up">Move Up</button>
+                                <button class="color-blue button-normal button-enabled button-large" id=""
+                                    data-text="Move Down">Move Down</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button class="color-green button-normal button-enabled button-large play" id=""
+                        data-text="Save">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="version">0.0.0</div>
+    <script src="../modules/skinview3d/bundles/skinview3d.bundle.js"></script>
+    <script src="./index.js"></script>
+</body>
+
+</html>

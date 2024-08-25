@@ -130,6 +130,6 @@ jdk-17/
 
 .mccitizens/
 profile/
-token.json
 test.js
 package-lock.json
+token.json
