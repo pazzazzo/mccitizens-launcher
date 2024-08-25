@@ -6,6 +6,7 @@ let maxRamInput = document.getElementById("max-ram")
 let minRamInput = document.getElementById("min-ram")
 let javaSaveBtn = document.getElementById("java-save")
 let loadProfileBtn = document.getElementById("loadProfile")
+let quitOnLaunchBtn = document.getElementById("quit-on-launch")
 
 electronAPI.getMemory().then(m => {
     m = Math.floor(Number(m.total)/10**9)
@@ -20,6 +21,18 @@ electronAPI.getJavaOption().then(o => {
     maxRamInput.value = o.maxRam
     minRamInput.value = o.minRam
 })
+electronAPI.getLauncherOption().then((o = {}) => {
+    console.log(o);
+    
+    if (Object.prototype.hasOwnProperty.call(o, "quitOnLaunch")) {
+        if (!o.quitOnLaunch) {
+            quitOnLaunchBtn.classList.remove("color-red")
+            quitOnLaunchBtn.classList.add("color-blue")
+            quitOnLaunchBtn.dataset.text = "Activer"
+            quitOnLaunchBtn.innerHTML = "Activer"
+        }
+    }
+})
 
 loadProfileBtn.addEventListener("click", () => {
     if (!loadProfileBtn.classList.contains("button-enabled")) {
@@ -29,6 +42,21 @@ loadProfileBtn.addEventListener("click", () => {
     loadProfileBtn.classList.remove("button-enabled")
     loadProfileBtn.classList.add("button-disabled")
 })
+
+quitOnLaunchBtn.addEventListener("click", () => {
+    if (quitOnLaunchBtn.innerHTML === "Activer") {
+        quitOnLaunchBtn.dataset.text = "Désactiver"
+        quitOnLaunchBtn.innerHTML = "Désactiver"
+        electronAPI.setLauncherOption({"quitOnLaunch": true})
+    } else {
+        quitOnLaunchBtn.dataset.text = "Activer"
+        quitOnLaunchBtn.innerHTML = "Activer"
+        electronAPI.setLauncherOption({"quitOnLaunch": false})
+    }
+    quitOnLaunchBtn.classList.toggle("color-red")
+    quitOnLaunchBtn.classList.toggle("color-blue")
+})
+
 electronAPI.onLoadProfileStatus((success, r) => {
     if (success) {
         loadProfileBtn.classList.add("button-enabled")

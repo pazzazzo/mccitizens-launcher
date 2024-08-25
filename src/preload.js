@@ -14,8 +14,11 @@ contextBridge.exposeInMainWorld("electronAPI", {
     getVersion: () => app.getVersion(),
     setJavaOption: (config) => ipcRenderer.send("java.option.set", config),
     getJavaOption: () => ipcRenderer.invoke("java.option.get"),
+    setLauncherOption: (config) => ipcRenderer.send("launcher.option.set", config),
+    getLauncherOption: () => ipcRenderer.invoke("launcher.option.get"),
     loadProfile: () => ipcRenderer.send("profile.load"),
     onLoadProfileStatus: (callback) => ipcRenderer.on("profile.load.status", (event, ...args) => callback(...args)),
+    
 })
 
 contextBridge.exposeInMainWorld("popup", {

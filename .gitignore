@@ -133,3 +133,4 @@ profile/
 test.js
 package-lock.json
 token.json
+token.sh

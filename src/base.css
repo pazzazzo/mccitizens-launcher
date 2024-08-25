@@ -20,9 +20,12 @@
 
   --description-color: #c2c2c2;
   --text-normal: #dcddde;
+  --text-color: #dcddde;
   --text-disabled: rgb(153, 155, 159);
   --text-muted: rgb(118, 118, 118);
   --text-link: #00aff4;
+  --bg-secondary-color: #3f3f46;
+  --text-secondary-color: #a1a1aa;
 
 
   --inp-white-color: #ffffffd3;

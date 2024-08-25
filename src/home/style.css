@@ -76,10 +76,10 @@
   max-width: 30rem;
   width: 30rem;
   margin: 0 auto;
-  background-color: #ffffff; /* bg-white */
-  background-color: var(--bg-color, #ffffff); /* dark:bg-zinc-800 */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* shadow-md */
-  border-radius: 0.5rem; /* rounded-lg */
+  background-color: #ffffff;
+  background-color: var(--background-color, #ffffff);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 0.5rem;
   overflow: hidden;
 }
 
@@ -147,14 +147,4 @@
 
 .details-button:hover {
   text-decoration: none; /* hover:underline */
-}
-
-/* Dark mode variables */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-color: #27272a; /* dark:bg-zinc-800 */
-    --text-color: #ffffff; /* dark:text-white */
-    --bg-secondary-color: #3f3f46; /* dark:bg-zinc-700 */
-    --text-secondary-color: #a1a1aa; /* dark:text-zinc-400 */
-  }
 }

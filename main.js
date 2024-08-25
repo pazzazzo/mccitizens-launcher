@@ -208,6 +208,17 @@ ipcMain.handle("java.option.get", (e) => {
     }
 })
 
+ipcMain.on("launcher.option.set", (event, config) => {
+    if (Object.prototype.hasOwnProperty.call(config, "quitOnLaunch")) {
+        store.set("quitOnLaunch", config.quitOnLaunch)
+    }
+})
+ipcMain.handle("launcher.option.get", (e) => {
+    return {
+        "quitOnLaunch": store.has("quitOnLaunch") ? store.get("quitOnLaunch") : true,
+    }
+})
+
 ipcMain.on("profile.load", (event) => {
     dialog.showOpenDialog(mainWindow, {
         properties: ['openDirectory', "showHiddenFiles"],
@@ -320,11 +331,14 @@ ipcMain.on("launch", async () => {
 
 launcher.on('debug', (e) => {
     console.log("[" + "DEGUB".cyan + "] " + e)
-    if (e.indexOf("Downloaded assets") >= 0) {
+});
+launcher.on('data', (e) => {
+    console.log("[" + "DATA".green + "] " + e)
+    
+    if (e.indexOf("Building Processors") >= 0 && (store.has("quitOnLaunch") ? store.get("quitOnLaunch") : true)) {
         app.quit()
     }
 });
-launcher.on('data', (e) => console.log("[" + "DATA".green + "] " + e));
 launcher.on("close", (c) => {
     console.log(`minecraft exit (${c})`);
 })
