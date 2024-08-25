@@ -41,11 +41,28 @@ const createWindow = () => {
 }
 
 autoUpdater.on('update-available', () => {
+    console.log("Update");
+
     dialog.showMessageBox({
         type: 'info',
         title: 'Mise à jour disponible',
         message: 'Une nouvelle version est disponible. Elle sera téléchargée en arrière-plan.',
     });
+});
+
+autoUpdater.on('update-not-available', () => {
+    console.log("no update");
+
+});
+
+autoUpdater.on("checking-for-update", () => {
+    console.log("check");
+    
+})
+
+autoUpdater.on('error', (error) => {
+    console.log(error);
+
 });
 
 autoUpdater.on('update-downloaded', () => {

@@ -6,7 +6,7 @@
   "scripts": {
     "start": "electron .",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dist": "electron-builder",
+    "dist": "electron-builder -p always",
     "dist-win": "electron-builder --win"
   },
   "author": {
@@ -46,7 +46,8 @@
     },
     "linux": {
       "target": [
-        "deb"
+        "deb",
+        "appimage"
       ],
       "category": "System"
     },
