@@ -73,8 +73,8 @@
 
 
 .card {
-  max-width: 30rem;
-  width: 30rem;
+  max-width: 35rem;
+  width: 32rem;
   margin: 0 auto;
   background-color: #ffffff;
   background-color: var(--background-color, #ffffff);

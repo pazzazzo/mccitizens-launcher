@@ -8,6 +8,7 @@ const os = require("os")
 const isDev = require("./isdev")
 const AppData = require("./appdata");
 const updateMods = require("./updateMods");
+const updateKube = require("./updateKube");
 const { autoUpdater } = require('electron-updater');
 const rootPath = require("./rootPath");
 const Store = require('electron-store');
@@ -29,12 +30,16 @@ const createWindow = () => {
         width: 1250,
         height: 758,
         autoHideMenuBar: true,
+        show: false,
         webPreferences: {
             preload: path.join(__dirname, "src", 'preload.js'),
         }
     })
 
     mainWindow.loadFile(__dirname + '/src/home/index.html')
+    mainWindow.on("ready-to-show", () => {
+        mainWindow.show()
+    })
 
     // Vérification des mises à jour
     autoUpdater.checkForUpdatesAndNotify();
@@ -295,18 +300,9 @@ ipcMain.on("launch", async () => {
     }
     let token = await xbox.getMinecraft();
     console.log(`[MCCitizens] Client package ${(fs.existsSync(rootPath()) && store.has("installed") && store.get("installed")) ? "already" : "not"} installed`);
-    if (fs.existsSync(rootPath()) && store.has("installed") && store.get("installed")) {
-        if (mainWindow) {
-            mainWindow.webContents.send("mods.sync.start")
-        }
-        updateMods().then(success => {
-            if (mainWindow) {
-                mainWindow.webContents.send("mods.sync.end", success)
-            }
-        })
-    }
+
     let opts = {
-        clientPackage: (fs.existsSync(rootPath()) && store.has("installed") && store.get("installed")) ? null : "https://github.com/pazzazzo/mccitizens-clientpackage/releases/download/v0.0.1-alpha/clientpackage.zip",
+        clientPackage: (fs.existsSync(rootPath()) && store.has("installed") && store.get("installed")) ? null : "https://github.com/pazzazzo/mccitizens-clientpackage/releases/latest/download/clientpackage.zip",
         removePackage: true,
         // Simply call this function to convert the msmc Minecraft object into a mclc authorization object
         authorization: token.mclc(),
@@ -325,8 +321,43 @@ ipcMain.on("launch", async () => {
         // javaPath: process.env.JAVA_HOME + "\\bin\\java"
         // javaPath: __dirname + "/jdk-17/bin/java"
     };
-    console.log("Starting!");
-    launcher.launch(opts);
+    if (fs.existsSync(rootPath()) && store.has("installed") && store.get("installed")) {
+        if (mainWindow) {
+            mainWindow.webContents.send("mods.sync.start")
+        }
+        let i = 0
+        function checkForLaunch() {
+            if (i === 2) {
+                console.log("Starting!");
+                launcher.launch(opts);
+            }
+        }
+        updateMods((p) => {
+            if (mainWindow) {
+                mainWindow.webContents.send("mods.sync.progress", p)
+            }
+        }).then(success => {
+            if (mainWindow) {
+                mainWindow.webContents.send("mods.sync.end", success)
+            }
+            i++
+            checkForLaunch()
+        }).catch((err) => {
+            console.error(err)
+        })
+        updateKube().then(success => {
+            if (mainWindow) {
+                mainWindow.webContents.send("kube.sync.end", success)
+            }
+            i++
+            checkForLaunch()
+        }).catch((err) => {
+            console.error(err)
+        })
+    } else {
+        console.log("Starting!");
+        launcher.launch(opts);
+    }
 })
 
 launcher.on('debug', (e) => {

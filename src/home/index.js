@@ -30,14 +30,14 @@ electronAPI.onConnected((url, player) => {
     height = 200
     let skinViewer = new skinview3d.SkinViewer({
         canvas: document.getElementById("skin"),
-        width: height*.75,
+        width: height * .75,
         height: height,
     });
-	// Rotate the player
-	skinViewer.animation = new skinview3d.IdleAnimation();
+    // Rotate the player
+    skinViewer.animation = new skinview3d.IdleAnimation();
     skinViewer.controls.enableRotate = false
     skinViewer.controls.enableZoom = false
-	skinViewer.zoom = 0.8;
+    skinViewer.zoom = 0.8;
 
     // Load another skin
     skinViewer.loadSkin(url.skin);
@@ -53,13 +53,24 @@ electronAPI.onNotConnected(() => {
     location = "../login/index.html"
 })
 electronAPI.onDownloadStatus((e) => {
-    progressBar.style.width = `${Math.floor(e.current/e.total*100)}%`
+    progressBar.style.width = `${Math.floor(e.current / e.total * 100)}%`
     progressText.innerText = `File: ${e.name} extracting..`
 })
 
 electronAPI.onProgressStatus((e) => {
-    progressPercent.innerText = Math.floor(e.task/e.total*100)
+    progressPercent.innerText = Math.floor(e.task / e.total * 100)
     progressTask.innerText = `Task: ${e.type}`
+})
+
+electronAPI.onModsSyncProgress((e) => {
+    progressPercent.innerText = Math.floor(e.index / e.total * 100)
+    progressTask.innerText = `Task: mod ${e.type}`
+    progressText.innerText = `File: ${e.file} extracting..`
+    if (e.percent) {
+        progressBar.style.width = `${e.percent}%`
+    } else {
+        progressBar.style.width = `0%`
+    }
 })
 
 electronAPI.getStatus("193.250.155.77").then(r => {

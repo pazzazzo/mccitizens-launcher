@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
     onNotConnected: (callback) => ipcRenderer.on("not_connected", (event, ...args) => callback(...args)),
     onDownloadStatus: (callback) => ipcRenderer.on("download.status", (event, ...args) => callback(...args)),
     onProgressStatus: (callback) => ipcRenderer.on("progress.status", (event, ...args) => callback(...args)),
+    onModsSyncProgress: (callback) => ipcRenderer.on("mods.sync.progress", (event, ...args) => callback(...args)),
     launch: () => ipcRenderer.send("launch"),
     getStatus: (address, port = 25565) => ipcRenderer.invoke("getServerStatus", address, port),
     getMemory: () => ipcRenderer.invoke("getMemory"),

@@ -1,6 +1,6 @@
 {
   "name": "mccitizens-launcher",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "A launcher for MCCitizens",
   "main": "main.js",
   "scripts": {
@@ -23,9 +23,10 @@
     "electron-store": "^8.2.0",
     "electron-updater": "^6.2.1",
     "minecraft-launcher-core": "^3.18.1",
-    "msmc": "^4.1.0",
+    "msmc": "^5.0.5",
     "net": "^1.0.2",
-    "skinview3d": "^3.0.0-alpha.1"
+    "skinview3d": "^3.0.0-alpha.1",
+    "unzipper": "^0.12.3"
   },
   "build": {
     "appId": "fr.hydix.mccitizens-launcher",
@@ -58,7 +59,7 @@
     }
   },
   "devDependencies": {
-    "electron": "^25.2.0",
+    "electron": "^32.0.1",
     "electron-builder": "^24.13.3"
   }
 }
