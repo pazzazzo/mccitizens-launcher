@@ -12,7 +12,9 @@ const updateKube = require("./updateKube");
 const { autoUpdater } = require('electron-updater');
 const rootPath = require("./rootPath");
 const Store = require('electron-store');
-const fs = require("fs")
+const fs = require("fs");
+const installJDK = require("./installJDK");
+const isClientPackageInstalled = require("./isClientPackageInstalled");
 console.log(app.getPath('userData'));
 
 let mainWindow;
@@ -35,7 +37,6 @@ const createWindow = () => {
             preload: path.join(__dirname, "src", 'preload.js'),
         }
     })
-
     mainWindow.loadFile(__dirname + '/src/home/index.html')
     mainWindow.on("ready-to-show", () => {
         mainWindow.show()
@@ -47,16 +48,9 @@ const createWindow = () => {
 
 autoUpdater.on('update-available', () => {
     console.log("Update");
-
-    // dialog.showMessageBox({
-    //     type: 'info',
-    //     title: 'Mise à jour disponible',
-    //     message: 'Une nouvelle version est disponible. Elle sera téléchargée en arrière-plan.',
-    // });
-    new Notification({
-        title: 'MCCitizens Launcher',
-        body: 'Nouvelle mise à jour disponible.',
-    }).show();
+    if (mainWindow) {
+        mainWindow.loadFile(__dirname + '/src/update/index.html')
+    }
 });
 
 autoUpdater.on('update-not-available', () => {
@@ -72,16 +66,13 @@ autoUpdater.on('error', (error) => {
 });
 
 autoUpdater.on('update-downloaded', () => {
-    dialog.showMessageBox({
-        type: 'info',
-        title: 'Mise à jour prête',
-        message: "Une nouvelle version a été téléchargée. Voulez-vous redémarrer l'application maintenant?",
-        buttons: ['Oui', 'Non'],
-    }).then((result) => {
-        if (result.response === 0) {
-            autoUpdater.quitAndInstall();
-        }
-    });
+    autoUpdater.quitAndInstall();
+});
+
+autoUpdater.on('download-progress', (progressObj) => {
+    if (mainWindow) {
+        mainWindow.webContents.send("update.progress", Math.floor(progressObj.percent))
+    }
 });
 
 app.whenReady().then(() => {
@@ -194,8 +185,8 @@ ipcMain.handle("getMemory", (e) => {
         "free": os.freemem()
     }
 })
-ipcMain.handle("getVersion", async (e) => {
-    return await app.getVersion()
+ipcMain.handle("getVersion", (e) => {
+    return app.getVersion()
 })
 
 ipcMain.on("java.option.set", (event, config) => {
@@ -228,7 +219,7 @@ ipcMain.on("profile.load", (event) => {
     dialog.showOpenDialog(mainWindow, {
         properties: ['openDirectory', "showHiddenFiles"],
         "buttonLabel": "Import",
-        "defaultPath": AppData + "/.modpack"
+        "defaultPath": AppData + "/.modpack",
     }).then(r => {
         console.log(r);
         let pth = r.filePaths[0]
@@ -299,10 +290,10 @@ ipcMain.on("launch", async () => {
         return
     }
     let token = await xbox.getMinecraft();
-    console.log(`[MCCitizens] Client package ${(fs.existsSync(rootPath()) && store.has("installed") && store.get("installed")) ? "already" : "not"} installed`);
+    console.log(`[MCCitizens] Client package ${(isClientPackageInstalled) ? "already" : "not"} installed`);
 
     let opts = {
-        clientPackage: (fs.existsSync(rootPath()) && store.has("installed") && store.get("installed")) ? null : "https://github.com/pazzazzo/mccitizens-clientpackage/releases/latest/download/clientpackage.zip",
+        clientPackage: (isClientPackageInstalled) ? null : "https://github.com/pazzazzo/mccitizens-clientpackage/releases/latest/download/clientpackage.zip",
         removePackage: true,
         // Simply call this function to convert the msmc Minecraft object into a mclc authorization object
         authorization: token.mclc(),
@@ -315,49 +306,75 @@ ipcMain.on("launch", async () => {
             max: `${store.get("maxRam") || 12}G`,
             min: `${store.get("minRam") || 4}G`
         },
+        javaPath: path.join(rootPath(), 'java', 'jdk-17.0.11', 'bin', 'java'),
         forge: rootPath() + "/forge.jar"
-
-        // javaPath: "C:\\Program Files\\Java\\jdk-17\\bin\\java"
-        // javaPath: process.env.JAVA_HOME + "\\bin\\java"
-        // javaPath: __dirname + "/jdk-17/bin/java"
     };
-    if (fs.existsSync(rootPath()) && store.has("installed") && store.get("installed")) {
-        if (mainWindow) {
-            mainWindow.webContents.send("mods.sync.start")
+    function checkClientPackage(cb) {
+        if (isClientPackageInstalled) {
+            if (mainWindow) {
+                mainWindow.webContents.send("mods.sync.start")
+            }
+            let i = 0
+            function checkForLaunch() {
+                i++
+                if (i === 2) {
+                    cb()
+                }
+            }
+            updateMods((p) => {
+                if (mainWindow) {
+                    mainWindow.webContents.send("mods.sync.progress", p)
+                }
+            }).then(success => {
+                if (mainWindow) {
+                    mainWindow.webContents.send("mods.sync.end", success)
+                }
+                checkForLaunch()
+            }).catch((err) => {
+                console.error(err)
+            })
+            updateKube().then(success => {
+                if (mainWindow) {
+                    mainWindow.webContents.send("kube.sync.end", success)
+                }
+                checkForLaunch()
+            }).catch((err) => {
+                console.error(err)
+            })
+        } else {
+            cb()
         }
-        let i = 0
-        function checkForLaunch() {
-            if (i === 2) {
-                console.log("Starting!");
-                launcher.launch(opts);
-            }
-        }
-        updateMods((p) => {
-            if (mainWindow) {
-                mainWindow.webContents.send("mods.sync.progress", p)
-            }
-        }).then(success => {
-            if (mainWindow) {
-                mainWindow.webContents.send("mods.sync.end", success)
-            }
-            i++
-            checkForLaunch()
-        }).catch((err) => {
-            console.error(err)
-        })
-        updateKube().then(success => {
-            if (mainWindow) {
-                mainWindow.webContents.send("kube.sync.end", success)
-            }
-            i++
-            checkForLaunch()
-        }).catch((err) => {
-            console.error(err)
-        })
-    } else {
-        console.log("Starting!");
-        launcher.launch(opts);
     }
+    function checkJava(cb) {
+        if (!fs.existsSync(path.join(rootPath(), "java"))) {
+            if (!fs.existsSync(rootPath())) {
+                fs.mkdirSync(rootPath())
+            }
+            installJDK(p => {
+                if (mainWindow) {
+                    mainWindow.webContents.send("java.install.progress", p)
+                }
+            }).then(r => {
+                if (r.success) {
+                    cb()
+                } else if (mainWindow) {
+                    mainWindow.webContents.send("java.install.error", r.error)
+                }
+            }).catch(e => {
+                console.error(e)
+                if (mainWindow) {
+                    mainWindow.webContents.send("java.install.error", e)
+                }
+            })
+        }
+    }
+    checkJava(() => {
+        checkClientPackage(() => {
+            console.log("Starting!");
+            launcher.launch(opts);
+        })
+    })
+
 })
 
 launcher.on('debug', (e) => {
@@ -365,7 +382,7 @@ launcher.on('debug', (e) => {
 });
 launcher.on('data', (e) => {
     console.log("[" + "DATA".green + "] " + e)
-    
+
     if (e.indexOf("Building Processors") >= 0 && (store.has("quitOnLaunch") ? store.get("quitOnLaunch") : true)) {
         app.quit()
     }

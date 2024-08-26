@@ -73,6 +73,14 @@ electronAPI.onModsSyncProgress((e) => {
     }
 })
 
+electronAPI.onJavaInstallProgress((e) => {
+    progressPercent.innerText = Math.floor(e)
+    progressTask.innerText = `Task: java install`
+    progressText.innerText = `File: JDK extracting..`
+    progressBar.style.width = `${e}%`
+})
+
+
 electronAPI.getStatus("193.250.155.77").then(r => {
     console.log(r);
     if (r.online) {

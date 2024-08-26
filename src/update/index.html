@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        :root {
+            --foreground: hsl(0, 0%, 100%);
+            --background: hsl(240, 10%, 3.9%);
+            --card-foreground: hsl(0, 0%, 100%);
+            --card: hsl(240, 7%, 11%);
+            --popover-foreground: hsl(0, 0%, 100%);
+            --popover: hsl(240, 10%, 3.9%);
+            --primary-foreground: hsl(240, 5.9%, 10%);
+            --primary: hsl(0, 0%, 98%);
+            --secondary-foreground: hsl(240, 4.8%, 95.9%);
+            --secondary: hsl(240, 5.9%, 10%);
+            --muted-foreground: hsl(240, 4.8%, 95.9%);
+            --muted: hsl(240, 3.8%, 45%);
+            --accent-foreground: hsl(240, 4.8%, 95.9%);
+            --accent: hsl(240, 5.9%, 10%);
+            --destructive-foreground: hsl(0, 72%, 51%);
+            --destructive: hsl(0, 0%, 98%);
+            --border: hsl(240, 5.9%, 90%);
+            --input: hsl(240, 5.9%, 90%);
+            --ring: hsl(240, 5.9%, 10%);
+            --chart-1: hsl(173, 58%, 39%);
+            --chart-2: hsl(12, 76%, 61%);
+            --chart-3: hsl(197, 37%, 24%);
+            --chart-4: hsl(43, 74%, 66%);
+            --chart-5: hsl(27, 87%, 67%);
+            --radius: 0.5rem;
+        }
+
+        body,
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: 'Inter', sans-serif;
+        }
+
+        img[src="./placeholder.svg"],
+        img[src="./placeholder-user.jpg"] {
+            filter: sepia(0.3) hue-rotate(-60deg) saturate(0.5) opacity(0.8);
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: var(--background);
+        }
+
+        .card {
+            width: 100%;
+            max-width: 28rem;
+            padding: 1.5rem;
+            background-color: var(--card);
+            border-radius: var(--radius);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .progress-bar-container {
+            position: relative;
+            height: 0.5rem;
+            width: 100%;
+            overflow: hidden;
+            border-radius: var(--radius);
+            background-color: rgba(104, 104, 104, 0.2);
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 100%;
+            flex: 1;
+            background-color: var(--primary);
+            transition: transform 0.3s;
+        }
+
+        .text-muted {
+            color: var(--muted);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="card">
+            <div class="content">
+                <div class="title">Updating...</div>
+                <div aria-valuemax="100" aria-valuemin="0" role="progressbar" data-state="indeterminate" data-max="100"
+                    class="progress-bar-container" aria-label="Update progress">
+                    <div data-state="indeterminate" id="progress-bar" data-max="100" class="progress-bar"></div>
+                </div>
+                <div class="text-muted">Downloading update package (<span id="progress-text">75</span>%)</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const progressText = document.getElementById("progress-text")
+        const progressBar = document.getElementById("progress-bar")
+        electronAPI.onUpdateProgress(p => {
+            progressText.innerText = p
+            progressBar.style.transform = `translateX(-${100-p}%)`
+        })
+    </script>
+
+</body>
+
+</html>

@@ -5,7 +5,7 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "electron . --trace-warnings",
     "clearstore": "node clearStore.js",
     "dist": "electron-builder -p always",
     "dist:win": "npm run dist -- --win"
@@ -26,6 +26,7 @@
     "msmc": "^5.0.5",
     "net": "^1.0.2",
     "skinview3d": "^3.0.0-alpha.1",
+    "tar": "^7.4.3",
     "unzipper": "^0.12.3"
   },
   "build": {
