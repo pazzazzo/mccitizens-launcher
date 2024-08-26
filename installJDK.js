@@ -1,17 +1,16 @@
 const os = require('os');
 const fs = require('fs');
 const path = require('path');
-const https = require('https');
-const unzipper = require('unzipper'); // Assurez-vous d'avoir installé ce module pour extraire les .zip
+const axios = require('axios');
+const unzipper = require('unzipper'); // Pour extraire les .zip
 const tar = require('tar'); // Pour extraire les .tar.gz
-const { exec } = require('child_process');
 const rootPath = require('./rootPath');
 
 // Détection du système d'exploitation
 const platform = os.platform(); // 'win32', 'darwin', 'linux'
 
-let MAX_RETRIES = 10
-let RETRY_DELAY = 2000
+let MAX_RETRIES = 10;
+let RETRY_DELAY = 2000;
 
 const jdkUrls = {
     win32: 'https://download.oracle.com/java/17/archive/jdk-17.0.11_windows-x64_bin.zip',
@@ -20,58 +19,60 @@ const jdkUrls = {
 };
 
 // Chemins
-const downloadDir = path.join(rootPath(), 'java');
+const downloadDir = path.join(rootPath(true), 'java');
 const downloadPath = path.join(downloadDir, `jdk.${platform === "win32" ? "zip" : "tar.gz"}`); // Changez à .tar.gz si nécessaire
 
 // Fonction pour télécharger un fichier avec affichage de la progression
-function downloadFile(url, dest, cb, retries = MAX_RETRIES) {
-    return new Promise((resolve, reject) => {
-        const file = fs.createWriteStream(dest);
-        const dl = (cberr) => {
-            if (fs.existsSync(dest)) {
-                fs.unlinkSync(dest)
-            }
-            https.get(url, response => {
-                const totalBytes = parseInt(response.headers['content-length'], 10);
-                let downloadedBytes = 0;
+async function downloadFile(url, dest, cb, retries = MAX_RETRIES) {
+    const file = fs.createWriteStream(dest);
 
-                response.pipe(file);
+    const dl = async () => {
+        try {
+            const response = await axios({
+                method: 'get',
+                url: url,
+                responseType: 'stream',
+            });
 
-                response.on('data', chunk => {
-                    downloadedBytes += chunk.length;
-                    const percentage = ((downloadedBytes / totalBytes) * 100).toFixed(2);
-                    // process.stdout.write(`JDK downloading: ${percentage}%\r`);
-                    cb(percentage)
-                });
+            const totalBytes = parseInt(response.headers['content-length'], 10);
+            let downloadedBytes = 0;
 
-                response.on('end', () => {
+            response.data.on('data', (chunk) => {
+                downloadedBytes += chunk.length;
+                const percentage = ((downloadedBytes / totalBytes) * 100).toFixed(2);
+                cb(percentage);
+            });
+
+            response.data.pipe(file);
+
+            response.data.on("error", (e) => {
+                console.log(e);
+                
+            })
+
+            return new Promise((resolve, reject) => {
+                file.on('finish', () => {
                     console.log('Download complete');
-                    file.close(resolve);
+                    resolve();
                 });
 
-                response.on('error', err => {
-                    console.error(err)
+                file.on('error', (e) => {
+                    console.log("e");
+                    
+                    throw e
                 });
-
-            }).on('error', err => {
-                console.error(err)
-                cberr(err)
             });
-        }
-
-        // Réessayer en cas d'échec
-        const attemptDownload = (attempts) => {
-            if (attempts <= 0) {
-                return reject(new Error('Failed to download file after multiple attempts.'));
-            }
-            dl((err) => {
+        } catch (err) {
+            if (retries > 0) {
                 console.error(`Download failed: ${err.message}. Retrying...`);
-                setTimeout(() => attemptDownload(attempts - 1), RETRY_DELAY);
-            });
-        };
+                setTimeout(() => dl(), RETRY_DELAY);
+            } else {
+                throw new Error(`Failed to download file after ${MAX_RETRIES} attempts.`);
+            }
+        }
+    };
 
-        attemptDownload(retries);
-    });
+    return dl();
 }
 
 // Fonction pour extraire un fichier .zip
@@ -103,7 +104,7 @@ async function installJDK(cb) {
 
         const jdkUrl = jdkUrls[platform];
         if (!jdkUrl) {
-            return { success: false, error: new Error(`Unsupported platform ${platform}`) }
+            throw new Error(`Unsupported platform ${platform}`);
         }
 
         console.log(`Downloading JDK from ${jdkUrl}`);
@@ -121,13 +122,11 @@ async function installJDK(cb) {
         fs.unlinkSync(downloadPath);
 
         console.log('JDK installation complete');
-
-        return { success: true }
-
+        return { success: true };
     } catch (error) {
-        console.error(error)
-        return { success: false, error }
+        console.error(error);
+        return { success: false, error };
     }
 }
 
-module.exports = installJDK
+module.exports = installJDK;
