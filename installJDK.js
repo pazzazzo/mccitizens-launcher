@@ -19,7 +19,7 @@ const jdkUrls = {
 };
 
 // Chemins
-const downloadDir = path.join(rootPath(true), 'java');
+const downloadDir = path.join(rootPath(), 'java');
 const downloadPath = path.join(downloadDir, `jdk.${platform === "win32" ? "zip" : "tar.gz"}`); // Changez à .tar.gz si nécessaire
 
 // Fonction pour télécharger un fichier avec affichage de la progression

@@ -14,6 +14,7 @@ const rootPath = require("./rootPath");
 const Store = require('electron-store');
 const fs = require("fs");
 const installJDK = require("./installJDK");
+const getModData = require("./getModData");
 const isClientPackageInstalled = require("./isClientPackageInstalled");
 console.log(app.getPath('userData'));
 
@@ -203,6 +204,13 @@ ipcMain.handle("java.option.get", (e) => {
         "minRam": store.get("minRam") || 4,
     }
 })
+ipcMain.on("mods.get", (event) => {
+    fs.readdir(path.join(rootPath(), "mods"), (err, files) => {
+        files.forEach(file => {
+            event.reply("mod.post", getModData(path.join(rootPath(), "mods", file)))
+        })
+    })
+})
 
 ipcMain.on("launcher.option.set", (event, config) => {
     if (Object.prototype.hasOwnProperty.call(config, "quitOnLaunch")) {
@@ -366,6 +374,8 @@ ipcMain.on("launch", async () => {
                     mainWindow.webContents.send("java.install.error", e)
                 }
             })
+        } else {
+            cb()
         }
     }
     checkJava(() => {
