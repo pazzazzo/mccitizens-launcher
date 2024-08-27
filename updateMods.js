@@ -17,19 +17,24 @@ function ensureDirectoryExists(dir) {
 // Fonction pour obtenir la liste des fichiers locaux
 function getLocalMods() {
     ensureDirectoryExists(LOCAL_MODS_DIR)
-    return fs.readdirSync(LOCAL_MODS_DIR);
+    return fs.readdirSync(LOCAL_MODS_DIR).map(name => {
+        let stats = fs.statSync(path.join(LOCAL_MODS_DIR, name))
+        let size = stats.size;
+        return {name, size}
+    })
 }
 
 // Fonction pour obtenir la liste des fichiers sur GitHub
 async function getRemoteMods() {
     const response = await axios.get(GITHUB_API_URL);
-    return response.data.map(file => file.name);
+    
+    return response.data.map(file => {return {name: file.name, size: file.size}});
 }
 
 // Fonction pour télécharger un fichier
 async function downloadFile(url, dest, cb) {
     const writer = fs.createWriteStream(dest);
-    
+
     // Commencez par obtenir la taille totale du fichier
     const response = await axios.get(url, { responseType: 'stream' });
     const totalLength = response.headers['content-length'];
@@ -59,29 +64,31 @@ async function updateMods(cb) {
     try {
         const localMods = getLocalMods();
         const remoteMods = await getRemoteMods();
+        console.log(remoteMods);
+        
 
         // Identifier les mods à supprimer
-        const modsToDelete = localMods.filter(mod => !remoteMods.includes(mod));
+        const modsToDelete = localMods.filter(mod => !remoteMods.some(rmod => (mod.name === rmod.name && mod.size === rmod.size)));
 
         // Supprimer les mods obsolètes
         for (const mod of modsToDelete) {
-            cb({ "type": "delete", "file": mod, "index": modsToDelete.indexOf(mod) +1, "total": modsToDelete.length })
-            fs.unlinkSync(path.join(LOCAL_MODS_DIR, mod));
-            console.log(`Deleted: ${mod}`);
+            cb({ "type": "delete", "file": mod, "index": modsToDelete.indexOf(mod) + 1, "total": modsToDelete.length })
+            fs.unlinkSync(path.join(LOCAL_MODS_DIR, mod.name));
+            console.log(`Deleted: ${mod.name}`);
         }
 
         // Identifier les mods à télécharger
-        const modsToDownload = remoteMods.filter(mod => !localMods.includes(mod));
+        const modsToDownload = remoteMods.filter(mod => !localMods.some(lmod => (mod.name === lmod.name && mod.size === lmod.size)));
 
         // Télécharger les nouveaux mods
         for (const mod of modsToDownload) {
-            cb({ "type": "download", "file": mod, "index": modsToDownload.indexOf(mod) +1, "total": modsToDownload.length })
-            const fileUrl = `https://raw.githubusercontent.com/pazzazzo/mccitizens-clientpackage/main/mods/${mod}`;
-            const destPath = path.join(LOCAL_MODS_DIR, mod);
+            cb({ "type": "download", "file": mod.name, "index": modsToDownload.indexOf(mod.name) + 1, "total": modsToDownload.length })
+            const fileUrl = `https://raw.githubusercontent.com/pazzazzo/mccitizens-clientpackage/main/mods/${mod.name}`;
+            const destPath = path.join(LOCAL_MODS_DIR, mod.name);
             await downloadFile(fileUrl, destPath, (p) => {
-                cb({ "type": "download", "file": mod, "index": modsToDownload.indexOf(mod) +1, "total": modsToDownload.length, "percent": p })
+                cb({ "type": "download", "file": mod.name, "index": modsToDownload.indexOf(mod.name) + 1, "total": modsToDownload.length, "percent": p })
             });
-            console.log(`Downloaded: ${mod}`);
+            console.log(`Downloaded: ${mod.name}`);
         }
 
         console.log('Mods synchronization complete.');
@@ -92,4 +99,8 @@ async function updateMods(cb) {
         return false
     }
 }
-module.exports = updateMods
+
+updateMods(() => {
+
+})
+// module.exports = updateMods
