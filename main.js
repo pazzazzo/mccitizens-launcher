@@ -240,7 +240,7 @@ ipcMain.handle("launcher.option.get", (e) => {
 })
 
 ipcMain.on("profile.load", (event) => {
-    let userProfile = path.join(os.homedir(), "curseforge", "minecraft", "Instance", profile?.name || "")
+    let userProfile = path.join(os.homedir(), "curseforge", "minecraft", "Instances", profile?.name || "")
     console.log(userProfile);
     
     if (!fs.existsSync(userProfile)) {
