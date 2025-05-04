@@ -240,10 +240,16 @@ ipcMain.handle("launcher.option.get", (e) => {
 })
 
 ipcMain.on("profile.load", (event) => {
+    let userProfile = path.join(os.homedir(), "curseforge", "minecraft", "Instance", profile?.name || "")
+    console.log(userProfile);
+    
+    if (!fs.existsSync(userProfile)) {
+        userProfile = AppData
+    }
     dialog.showOpenDialog(mainWindow, {
         properties: ['openDirectory', "showHiddenFiles"],
         "buttonLabel": "Import",
-        "defaultPath": AppData + "/.modpack",
+        "defaultPath": userProfile,
     }).then(r => {
         console.log(r);
         let pth = r.filePaths[0]
@@ -298,6 +304,7 @@ ipcMain.on("profile.load", (event) => {
                     copyDir("schematics")
                     copyDir("config")
                     copyDir("saves")
+                    copyDir("mods")
                     event.reply("profile.load.status", true)
                 } else {
                     event.reply("profile.load.status", false, "Not a profile forlder")
@@ -330,7 +337,7 @@ ipcMain.on("launch-fabric", async () => {
                 max: `${store.get("maxRam") || 12}G`,
                 min: `${store.get("minRam") || 4}G`
             },
-            // javaPath: path.join(rootPath(), 'java', 'jdk-21.0.7', 'bin', 'java'),
+            javaPath: path.join(rootPath(), 'java', 'jdk-21', 'bin', 'java'),
             customArgs: [
                 `-Dfabric.gameJarPath=${path.join(rootPath(), 'versions', '1.21.5', '1.21.5.jar')}`
             ]
