@@ -7,6 +7,9 @@ const rootPath = require('./rootPath');
 
 
 async function updateServer(ip) {
+    if (!fs.existsSync(rootPath(), 'servers.dat')) {
+        return
+    }
     const NBT = await import('nbtify');
     const filePath = path.join(rootPath(), 'servers.dat');
 

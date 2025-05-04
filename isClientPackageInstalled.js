@@ -4,4 +4,4 @@ const path = require('path')
 const rootPath = require("./rootPath");
 const store = new Store()
 
-module.exports = (fs.existsSync(path.join(rootPath(), "forge.jar")) && store.has("installed") && store.get("installed"))
+module.exports = (fs.existsSync(rootPath()) && store.has("installed") && store.get("installed"))

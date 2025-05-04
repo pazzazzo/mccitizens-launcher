@@ -11,6 +11,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
     onModsSyncProgress: (callback) => ipcRenderer.on("mods.sync.progress", (event, ...args) => callback(...args)),
     onJavaInstallProgress: (callback) => ipcRenderer.on("java.install.progress", (event, ...args) => callback(...args)),
     onJavaInstallError: (callback) => ipcRenderer.on("java.install.error", (event, ...args) => callback(...args)),
+    onClientInstallProgress: (callback) => ipcRenderer.on("client.install.progress", (event, ...args) => callback(...args)),
+    onClientInstallError: (callback) => ipcRenderer.on("client.install.error", (event, ...args) => callback(...args)),
     onUpdateProgress: (callback) => ipcRenderer.on("update.progress", (event, ...args) => callback(...args)),
     getModsData: () => ipcRenderer.send("mods.get"),
     onModData: (callback) => ipcRenderer.on("mod.post", (event, ...args) => callback(...args)),

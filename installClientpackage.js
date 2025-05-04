@@ -1,26 +1,18 @@
-const os = require('os');
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
-const unzipper = require('unzipper'); // Pour extraire les .zip
 const tar = require('tar'); // Pour extraire les .tar.gz
+const unzipper = require('unzipper'); // Pour extraire les .zip
 const rootPath = require('./rootPath');
+const request = require("request");
 
-// Détection du système d'exploitation
-const platform = os.platform(); // 'win32', 'darwin', 'linux'
 
 let MAX_RETRIES = 10;
 let RETRY_DELAY = 2000;
 
-const jdkUrls = {
-    win32: 'https://download.oracle.com/java/21/archive/jdk-21_windows-x64_bin.zip',
-    darwin: 'https://download.oracle.com/java/21/archive/jdk-21_macos-x64_bin.tar.gz',
-    linux: 'https://download.oracle.com/java/21/archive/jdk-21_linux-x64_bin.tar.gz'
-};
-
 // Chemins
-const downloadDir = path.join(rootPath(), 'java');
-const downloadPath = path.join(downloadDir, `jdk.${platform === "win32" ? "zip" : "tar.gz"}`); // Changez à .tar.gz si nécessaire
+const downloadDir = path.join(rootPath());
+const downloadPath = path.join(rootPath(), "clientpackage.zip");
 
 // Fonction pour télécharger un fichier avec affichage de la progression
 async function downloadFile(url, dest, cb, retries = MAX_RETRIES) {
@@ -47,7 +39,7 @@ async function downloadFile(url, dest, cb, retries = MAX_RETRIES) {
 
             response.data.on("error", (e) => {
                 console.log(e);
-                
+
             })
 
             return new Promise((resolve, reject) => {
@@ -58,7 +50,7 @@ async function downloadFile(url, dest, cb, retries = MAX_RETRIES) {
 
                 file.on('error', (e) => {
                     console.log("e");
-                    
+
                     throw e
                 });
             });
@@ -85,7 +77,6 @@ function extractZip(src, dest) {
     });
 }
 
-// Fonction pour extraire un fichier .tar.gz
 function extractTarGz(src, dest) {
     return new Promise((resolve, reject) => {
         fs.createReadStream(src)
@@ -95,33 +86,26 @@ function extractTarGz(src, dest) {
     });
 }
 
-// Fonction pour installer le JDK
-async function installJDK(cb) {
+async function installClientpackage(cb) {
     try {
         if (!fs.existsSync(downloadDir)) {
             fs.mkdirSync(downloadDir);
         }
 
-        const jdkUrl = jdkUrls[platform];
-        if (!jdkUrl) {
-            throw new Error(`Unsupported platform ${platform}`);
-        }
+        const url = "https://github.com/pazzazzo/mccitizens-clientpackage/releases/latest/download/clientpackage.zip"
 
-        console.log(`Downloading JDK from ${jdkUrl}`);
-        await downloadFile(jdkUrl, downloadPath, cb);
+        console.log(`Downloading clientpackage from ${url}`);
+        await downloadFile(url, downloadPath, cb);
 
-        if (platform === 'win32') {
-            console.log('Extracting JDK (ZIP)');
-            await extractZip(downloadPath, downloadDir);
-        } else {
-            console.log('Extracting JDK (TAR.GZ)');
-            await extractTarGz(downloadPath, downloadDir);
-        }
+        // console.log('Extracting clientpackage (ZIP)');
+        // await extractTarGz(downloadPath, downloadDir);
 
-        // Nettoyer
-        fs.unlinkSync(downloadPath);
+        const res = await unzipper.Open.url(request, url)
+        await res.extract({ path: downloadDir })
 
-        console.log('JDK installation complete');
+        // fs.unlinkSync(downloadPath);
+
+        console.log('clientpackage installation complete');
         return { success: true };
     } catch (error) {
         console.error(error);
@@ -129,4 +113,4 @@ async function installJDK(cb) {
     }
 }
 
-module.exports = installJDK;
+module.exports = installClientpackage;

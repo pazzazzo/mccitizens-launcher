@@ -79,6 +79,12 @@ electronAPI.onJavaInstallProgress((e) => {
     progressText.innerText = `File: JDK extracting..`
     progressBar.style.width = `${e}%`
 })
+electronAPI.onClientInstallProgress((e) => {
+    progressPercent.innerText = Math.floor(e)
+    progressTask.innerText = `Task: client install`
+    progressText.innerText = `File: Client extracting..`
+    progressBar.style.width = `${e}%`
+})
 
 electronAPI.getIP().then(res => {
     electronAPI.getStatus(...res.split(":")).then(r => {

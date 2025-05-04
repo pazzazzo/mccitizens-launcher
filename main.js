@@ -14,6 +14,7 @@ const rootPath = require("./rootPath");
 const Store = require('electron-store');
 const fs = require("fs");
 const installJDK = require("./installJDK");
+const installClientpackage = require("./installClientpackage");
 const getModData = require("./getModData");
 const isClientPackageInstalled = require("./isClientPackageInstalled");
 const { default: axios } = require("axios");
@@ -23,6 +24,9 @@ console.log(app.getPath('userData'));
 let mainWindow;
 let profile;
 let store = new Store()
+let mcSession = null;
+let installStep = 0
+let installCallback = null;
 
 const launcher = new Client();
 const authManager = new Auth("select_account");
@@ -311,96 +315,105 @@ ipcMain.on("launch-fabric", async () => {
     }
     let token = await xbox.getMinecraft();
     console.log(`[MCCitizens] Client package ${(isClientPackageInstalled) ? "already" : "not"} installed`);
-
-    let opts = {
-        clientPackage: (isClientPackageInstalled) ? null : "https://github.com/pazzazzo/mccitizens-clientpackage/releases/latest/download/clientpackage.zip",
-        removePackage: true,
-        // Simply call this function to convert the msmc Minecraft object into a mclc authorization object
-        authorization: token.mclc(),
-        root: rootPath(),
-        version: {
-            number: "1.21.5",
-            type: "release",
-            custom: "fabric"
-        },
-        memory: {
-            max: `${store.get("maxRam") || 12}G`,
-            min: `${store.get("minRam") || 4}G`
-        },
-        // javaPath: path.join(rootPath(), 'java', 'jdk-21.0.7', 'bin', 'java'),
-        customArgs: [
-            `-Dfabric.gameJarPath=${path.join(rootPath(), 'versions', '1.21.5', '1.21.5.jar')}`
-        ]
-    };
-    function checkClientPackage(cb) {
-        if (isClientPackageInstalled) {
-            if (mainWindow) {
-                mainWindow.webContents.send("mods.sync.start")
+    function launch() {
+        let opts = {
+            removePackage: true,
+            // Simply call this function to convert the msmc Minecraft object into a mclc authorization object
+            authorization: token.mclc(),
+            root: rootPath(),
+            version: {
+                number: "1.21.5",
+                type: "release",
+                custom: "fabric"
+            },
+            memory: {
+                max: `${store.get("maxRam") || 12}G`,
+                min: `${store.get("minRam") || 4}G`
+            },
+            // javaPath: path.join(rootPath(), 'java', 'jdk-21.0.7', 'bin', 'java'),
+            customArgs: [
+                `-Dfabric.gameJarPath=${path.join(rootPath(), 'versions', '1.21.5', '1.21.5.jar')}`
+            ]
+        };
+        function checkJava(cb) {
+            if (!fs.existsSync(path.join(rootPath(), "java"))) {
+                if (!fs.existsSync(rootPath())) {
+                    fs.mkdirSync(rootPath())
+                }
+                installJDK(p => {
+                    if (mainWindow) {
+                        mainWindow.webContents.send("java.install.progress", p)
+                    }
+                }).then(r => {
+                    if (r.success) {
+                        cb()
+                    } else if (mainWindow) {
+                        mainWindow.webContents.send("java.install.error", r.error)
+                    }
+                }).catch(e => {
+                    console.error(e)
+                    if (mainWindow) {
+                        mainWindow.webContents.send("java.install.error", e)
+                    }
+                })
+            } else {
+                cb()
             }
-            let i = 0
-            function checkForLaunch() {
-                i++
-                if (i === 2) {
-                    cb()
-                }
-            }
-            /*updateMods((p) => {
-                if (mainWindow) {
-                    mainWindow.webContents.send("mods.sync.progress", p)
-                }
-            }).then(success => {
-                if (mainWindow) {
-                    mainWindow.webContents.send("mods.sync.end", success)
-                }
-                checkForLaunch()
-            }).catch((err) => {
-                console.error(err)
-            })*/
-            checkForLaunch()
-            updateKube().then(success => {
-                if (mainWindow) {
-                    mainWindow.webContents.send("kube.sync.end", success)
-                }
-                checkForLaunch()
-            }).catch((err) => {
-                console.error(err)
-            })
-        } else {
-            cb()
         }
-    }
-    function checkJava(cb) {
-        if (!fs.existsSync(path.join(rootPath(), "java"))) {
-            if (!fs.existsSync(rootPath())) {
-                fs.mkdirSync(rootPath())
-            }
-            installJDK(p => {
-                if (mainWindow) {
-                    mainWindow.webContents.send("java.install.progress", p)
-                }
-            }).then(r => {
-                if (r.success) {
-                    cb()
-                } else if (mainWindow) {
-                    mainWindow.webContents.send("java.install.error", r.error)
-                }
-            }).catch(e => {
-                console.error(e)
-                if (mainWindow) {
-                    mainWindow.webContents.send("java.install.error", e)
-                }
-            })
-        } else {
-            cb()
-        }
-    }
-    checkJava(() => {
-        checkClientPackage(() => {
+        checkJava(() => {
+            mainWindow.webContents.send("mods.sync.start")
             console.log("Starting!");
-            launcher.launch(opts);
+            launcher.launch(opts).then(p => {
+                mcSession = p
+            })
         })
-    })
+    }
+    if (isClientPackageInstalled) {
+        launch()
+    } else {
+        if (!fs.existsSync(rootPath())) {
+            fs.mkdirSync(rootPath())
+        }
+        installClientpackage(p => {
+            if (mainWindow) {
+                mainWindow.webContents.send("client.install.progress", p)
+            }
+        }).then(r => {
+            if (r.success) {
+                installJDK(p => {
+                    if (mainWindow) {
+                        mainWindow.webContents.send("java.install.progress", p)
+                    }
+                }).then(r => {
+                    if (r.success) {
+                        console.log("a");
 
+                        installMCVersion({ "version": "1.21.5" }, () => {
+                            console.log("ad");
+                            mcSession.kill()
+                            launch()
+                        })
+                    } else if (mainWindow) {
+                        mainWindow.webContents.send("java.install.error", r.error)
+                    }
+                }).catch(e => {
+                    console.error(e)
+                    if (mainWindow) {
+                        mainWindow.webContents.send("java.install.error", e)
+                    }
+                })
+            } else if (mainWindow) {
+                mainWindow.webContents.send("client.install.error", r.error)
+            }
+        }).catch(e => {
+            console.error(e)
+            if (mainWindow) {
+                mainWindow.webContents.send("client.install.error", e)
+            }
+        })
+
+
+    }
 })
 
 ipcMain.on("launch", async () => {
@@ -498,14 +511,50 @@ ipcMain.on("launch", async () => {
 
 })
 
+async function installMCVersion(opt = {}, cb) {
+    installStep = opt.step
+    installCallback = cb
+    let token = await xbox.getMinecraft();
+    let opts = {
+        clientPackage: null,
+        // removePackage: true,
+        // Simply call this function to convert the msmc Minecraft object into a mclc authorization object
+        authorization: token.mclc(),
+        root: rootPath(),
+        version: {
+            number: opt.version,
+            type: "release",
+            custom: opt.custom || null
+        },
+        memory: {
+            max: `${store.get("maxRam") || 12}G`,
+            min: `${store.get("minRam") || 4}G`
+        },
+        javaPath: path.join(rootPath(), 'java', opt.java || "jdk-21", 'bin', 'java'),
+        customArgs: [
+            `-Dfabric.gameJarPath=${path.join(rootPath(), 'versions', opt.version, opt.version + '.jar')}`
+        ]
+    };
+    if (opt.forge) {
+        opts.forge = rootPath() + "/forge.jar"
+    }
+    launcher.launch(opts).then(p => {
+        mcSession = p
+    })
+}
+
 launcher.on('debug', (e) => {
     console.log("[" + "DEGUB".cyan + "] " + e)
 });
 launcher.on('data', (e) => {
     console.log("[" + "DATA".green + "] " + e)
 
-    if ((e.indexOf("Building Processors") >= 0 || e.indexOf("[Render thread/INFO]") >= 0) && store.has("quitOnLaunch") ? store.get("quitOnLaunch") : true) {
-        app.quit()
+    if ((e.indexOf("Building Processors") >= 0 || e.indexOf("[Render thread/INFO]") >= 0)) {
+        if (installCallback) {
+            installCallback()
+        } else if (store.has("quitOnLaunch") ? store.get("quitOnLaunch") : true) {
+            app.quit()
+        }
     }
 });
 launcher.on("close", (c) => {
