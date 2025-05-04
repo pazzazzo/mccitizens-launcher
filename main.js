@@ -16,6 +16,7 @@ const fs = require("fs");
 const installJDK = require("./installJDK");
 const installClientpackage = require("./installClientpackage");
 const getModData = require("./getModData");
+const getFabricModData = require("./getFabricModData");
 const isClientPackageInstalled = require("./isClientPackageInstalled");
 const { default: axios } = require("axios");
 const updateServer = require("./updateServer");
@@ -25,7 +26,6 @@ let mainWindow;
 let profile;
 let store = new Store()
 let mcSession = null;
-let installStep = 0
 let installCallback = null;
 
 const launcher = new Client();
@@ -218,12 +218,12 @@ ipcMain.handle("java.option.get", (e) => {
 ipcMain.on("mods.get", (event) => {
     fs.readdir(path.join(rootPath(), "mods"), (err, files) => {
         files.forEach(file => {
-            event.reply("mod.post", getModData(path.join(rootPath(), "mods", file)))
+            event.reply("mod.post", getFabricModData(path.join(rootPath(), "mods", file)))
         })
     })
     fs.existsSync(path.join(rootPath(), "disabled-mods")) && fs.readdir(path.join(rootPath(), "mods"), (err, files) => {
         files.forEach(file => {
-            event.reply("mod.post", getModData(path.join(rootPath(), "mods", file)))
+            event.reply("mod.post", getFabricModData(path.join(rootPath(), "mods", file)))
         })
     })
 })
@@ -396,8 +396,9 @@ ipcMain.on("launch-fabric", async () => {
                         console.log("a");
 
                         installMCVersion({ "version": "1.21.5" }, () => {
-                            console.log("ad");
+                            installCallback = null;
                             mcSession.kill()
+                            store.set("installed", true)
                             launch()
                         })
                     } else if (mainWindow) {

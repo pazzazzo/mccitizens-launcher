@@ -1,13 +1,13 @@
 {
   "name": "mccitizens-launcher",
-  "version": "0.0.10",
+  "version": "0.0.14",
   "description": "A launcher for MCCitizens",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "test": "electron . --trace-warnings",
     "clearstore": "node clearStore.js",
-    "dist": "electron-builder -p always",
+    "dist": "electron-builder",
     "dist:win": "npm run dist -- --win"
   },
   "author": {
@@ -36,6 +36,7 @@
   "build": {
     "appId": "fr.hydix.mccitizens-launcher",
     "productName": "MCCitizens Launcher",
+    "artifactName": "MCCitizens-Launcher-Setup-${version}.${ext}",
     "icon": "./src/assets/icons/minecraft.png",
     "directories": {
       "output": "dist"
@@ -58,9 +59,8 @@
       ],
       "category": "System"
     },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+    "msi": {
+      "oneClick": false
     }
   },
   "devDependencies": {
