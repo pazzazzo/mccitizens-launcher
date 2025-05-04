@@ -16,7 +16,7 @@ playBtn.addEventListener("click", () => {
         state = "launch"
         playBtn.classList.remove("button-enabled")
         playBtn.classList.add("button-disabled")
-        electronAPI.launch()
+        electronAPI.launchFabric()
         startPopup.classList.remove("hidden")
     }
 })
@@ -80,14 +80,15 @@ electronAPI.onJavaInstallProgress((e) => {
     progressBar.style.width = `${e}%`
 })
 
-
-electronAPI.getStatus("193.250.155.77").then(r => {
-    console.log(r);
-    if (r.online) {
-        serverStatus.classList.remove("off")
-        serverStatus.innerHTML = "check"
-    } else {
-        serverStatus.classList.add("off")
-        serverStatus.innerHTML = "close"
-    }
+electronAPI.getIP().then(res => {
+    electronAPI.getStatus(...res.split(":")).then(r => {
+        console.log(r);
+        if (r.online) {
+            serverStatus.classList.remove("off")
+            serverStatus.innerHTML = "check"
+        } else {
+            serverStatus.classList.add("off")
+            serverStatus.innerHTML = "close"
+        }
+    })
 })

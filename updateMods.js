@@ -100,7 +100,4 @@ async function updateMods(cb) {
     }
 }
 
-updateMods(() => {
-
-})
-// module.exports = updateMods
+module.exports = updateMods

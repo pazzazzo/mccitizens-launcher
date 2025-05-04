@@ -113,5 +113,5 @@ electronAPI.getStatus("193.250.155.77").then(r => {
 electronAPI.getModsData()
 electronAPI.onModData((data) => {
     console.log(data);
-    modsList.innerHTML += `<div class="mod-item"><img src="${data.logoBase64 ? `data:image/png;base64,${data.logoBase64}` : "../assets/images/placeholder.svg"}" width="32" height="32" alt="Mod Icon"><div class="mod-info"><div class="mod-name">${data.displayName}</div><div class="mod-version">v${data.version}</div></div><button class="color-red button-normal button-disabled button-large remove-mod" id="reset"data-text="Remove">Remove</button></div>`
+    modsList.innerHTML += `<div class="mod-item"><img src="${data.logoBase64 ? `data:image/png;base64,${data.logoBase64}` : "../assets/images/placeholder.svg"}" width="32" height="32" alt="Mod Icon"><div class="mod-info"><div class="mod-name">${data.displayName}</div><div class="mod-version">v${data.version}</div></div><button class="color-red button-normal button-disabled button-large disable-mod" id="reset"data-text="Désactiver">Désactiver</button></div>`
 })

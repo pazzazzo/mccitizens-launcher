@@ -16,6 +16,8 @@ const fs = require("fs");
 const installJDK = require("./installJDK");
 const getModData = require("./getModData");
 const isClientPackageInstalled = require("./isClientPackageInstalled");
+const { default: axios } = require("axios");
+const updateServer = require("./updateServer");
 console.log(app.getPath('userData'));
 
 let mainWindow;
@@ -96,6 +98,7 @@ ipcMain.on("auto_connect", (e) => {
             e.reply("connected", { "skin": profile.skins[0].url, "cape": profile.capes[0]?.url, "head": `https://mc-heads.net/head/${profile.name}/left` }, { "username": profile.name })
             xbox = xboxManager
         }).catch(r => {
+            e.reply("not_connected")
             console.log(r);
         })
     } else if (profile) {
@@ -111,10 +114,9 @@ ipcMain.on("auto_connect", (e) => {
         e.reply("not_connected")
     }
 })
-
 ipcMain.on("connect", (e) => {
     let msAuthToken = store.get("token") || {}
-    authManager.launch("raw").then(async xboxManager => {
+    authManager.launch("electron").then(async xboxManager => {
         msAuthToken["access_token"] = xboxManager.msToken.access_token
         msAuthToken["refresh_token"] = xboxManager.msToken.refresh_token
         store.set("token", msAuthToken)
@@ -129,6 +131,11 @@ ipcMain.on("connect", (e) => {
 ipcMain.on("reset", (e) => {
     store.clear()
     app.quit()
+})
+ipcMain.handle("getServerIp", async (event) => {
+    const r = await axios.get("https://raw.githubusercontent.com/pazzazzo/mccitizens-clientpackage/main/ip.txt")
+    updateServer(r.data)
+    return r.data
 })
 ipcMain.handle("getServerStatus", (event, address, port = 25565) => {
     if (port == null || port == '') {
@@ -206,6 +213,11 @@ ipcMain.handle("java.option.get", (e) => {
 })
 ipcMain.on("mods.get", (event) => {
     fs.readdir(path.join(rootPath(), "mods"), (err, files) => {
+        files.forEach(file => {
+            event.reply("mod.post", getModData(path.join(rootPath(), "mods", file)))
+        })
+    })
+    fs.existsSync(path.join(rootPath(), "disabled-mods")) && fs.readdir(path.join(rootPath(), "mods"), (err, files) => {
         files.forEach(file => {
             event.reply("mod.post", getModData(path.join(rootPath(), "mods", file)))
         })
@@ -293,6 +305,104 @@ ipcMain.on("profile.load", (event) => {
     })
 })
 
+ipcMain.on("launch-fabric", async () => {
+    if (!xbox) {
+        return
+    }
+    let token = await xbox.getMinecraft();
+    console.log(`[MCCitizens] Client package ${(isClientPackageInstalled) ? "already" : "not"} installed`);
+
+    let opts = {
+        clientPackage: (isClientPackageInstalled) ? null : "https://github.com/pazzazzo/mccitizens-clientpackage/releases/latest/download/clientpackage.zip",
+        removePackage: true,
+        // Simply call this function to convert the msmc Minecraft object into a mclc authorization object
+        authorization: token.mclc(),
+        root: rootPath(),
+        version: {
+            number: "1.21.5",
+            type: "release",
+            custom: "fabric"
+        },
+        memory: {
+            max: `${store.get("maxRam") || 12}G`,
+            min: `${store.get("minRam") || 4}G`
+        },
+        // javaPath: path.join(rootPath(), 'java', 'jdk-21.0.7', 'bin', 'java'),
+        customArgs: [
+            `-Dfabric.gameJarPath=${path.join(rootPath(), 'versions', '1.21.5', '1.21.5.jar')}`
+        ]
+    };
+    function checkClientPackage(cb) {
+        if (isClientPackageInstalled) {
+            if (mainWindow) {
+                mainWindow.webContents.send("mods.sync.start")
+            }
+            let i = 0
+            function checkForLaunch() {
+                i++
+                if (i === 2) {
+                    cb()
+                }
+            }
+            /*updateMods((p) => {
+                if (mainWindow) {
+                    mainWindow.webContents.send("mods.sync.progress", p)
+                }
+            }).then(success => {
+                if (mainWindow) {
+                    mainWindow.webContents.send("mods.sync.end", success)
+                }
+                checkForLaunch()
+            }).catch((err) => {
+                console.error(err)
+            })*/
+            checkForLaunch()
+            updateKube().then(success => {
+                if (mainWindow) {
+                    mainWindow.webContents.send("kube.sync.end", success)
+                }
+                checkForLaunch()
+            }).catch((err) => {
+                console.error(err)
+            })
+        } else {
+            cb()
+        }
+    }
+    function checkJava(cb) {
+        if (!fs.existsSync(path.join(rootPath(), "java"))) {
+            if (!fs.existsSync(rootPath())) {
+                fs.mkdirSync(rootPath())
+            }
+            installJDK(p => {
+                if (mainWindow) {
+                    mainWindow.webContents.send("java.install.progress", p)
+                }
+            }).then(r => {
+                if (r.success) {
+                    cb()
+                } else if (mainWindow) {
+                    mainWindow.webContents.send("java.install.error", r.error)
+                }
+            }).catch(e => {
+                console.error(e)
+                if (mainWindow) {
+                    mainWindow.webContents.send("java.install.error", e)
+                }
+            })
+        } else {
+            cb()
+        }
+    }
+    checkJava(() => {
+        checkClientPackage(() => {
+            console.log("Starting!");
+            launcher.launch(opts);
+        })
+    })
+
+})
+
 ipcMain.on("launch", async () => {
     if (!xbox) {
         return
@@ -329,7 +439,7 @@ ipcMain.on("launch", async () => {
                     cb()
                 }
             }
-            updateMods((p) => {
+            /*updateMods((p) => {
                 if (mainWindow) {
                     mainWindow.webContents.send("mods.sync.progress", p)
                 }
@@ -340,7 +450,8 @@ ipcMain.on("launch", async () => {
                 checkForLaunch()
             }).catch((err) => {
                 console.error(err)
-            })
+            })*/
+            checkForLaunch()
             updateKube().then(success => {
                 if (mainWindow) {
                     mainWindow.webContents.send("kube.sync.end", success)
@@ -393,7 +504,7 @@ launcher.on('debug', (e) => {
 launcher.on('data', (e) => {
     console.log("[" + "DATA".green + "] " + e)
 
-    if (e.indexOf("Building Processors") >= 0 && (store.has("quitOnLaunch") ? store.get("quitOnLaunch") : true)) {
+    if ((e.indexOf("Building Processors") >= 0 || e.indexOf("[Render thread/INFO]") >= 0) && store.has("quitOnLaunch") ? store.get("quitOnLaunch") : true) {
         app.quit()
     }
 });
