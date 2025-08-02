@@ -21,8 +21,10 @@ const isClientPackageInstalled = require("./isClientPackageInstalled");
 const { default: axios } = require("axios");
 const updateServer = require("./updateServer");
 console.log(app.getPath('userData'));
+const { Worker } = require('worker_threads');
 let state = "disconnected"
 
+/** @type {BrowserWindow} */
 let mainWindow;
 let profile;
 let store = new Store()
@@ -228,16 +230,29 @@ ipcMain.handle("java.option.get", (e) => {
     }
 })
 ipcMain.on("mods.get", (event) => {
-    fs.existsSync(path.join(rootPath(), "mods")) && fs.readdir(path.join(rootPath(), "mods"), (err, files) => {
-        files.forEach(file => {
-            event.reply("mod.post", getModData(path.join(rootPath(), "mods", file)))
-        })
-    })
-    fs.existsSync(path.join(rootPath(), "disabled-mods")) && fs.readdir(path.join(rootPath(), "mods"), (err, files) => {
-        files.forEach(file => {
-            event.reply("mod.post", getModData(path.join(rootPath(), "disabled-mods", file)))
-        })
-    })
+    const modsDir = path.join(rootPath(), 'mods');
+    const disabledDir = path.join(rootPath(), 'disabled-mods');
+    const dirs = [modsDir, disabledDir];
+
+    return new Promise((resolve, reject) => {
+        const worker = new Worker(path.join(__dirname, "workers", 'mods-worker.js'));
+
+        worker.on('message', (modData) => {
+            if (modData === null) {
+                resolve();
+                worker.terminate();
+            } else {
+                event.sender.send('mod.post', modData);
+            }
+        });
+
+        worker.on('error', (err) => {
+            console.error('Worker erreur:', err);
+            reject(err);
+        });
+
+        worker.postMessage({ dirs });
+    });
 })
 ipcMain.on("mods.open.folder", (event) => {
     shell.openPath(path.join(rootPath(), "mods"))
@@ -480,11 +495,11 @@ ipcMain.on("launch", async () => {
             let i = 0
             function checkForLaunch() {
                 i++
-                if (i === 2) {
+                if (i === 3) {
                     cb()
                 }
             }
-            /*updateMods((p) => {
+            updateMods((p) => {
                 if (mainWindow) {
                     mainWindow.webContents.send("mods.sync.progress", p)
                 }
@@ -495,7 +510,7 @@ ipcMain.on("launch", async () => {
                 checkForLaunch()
             }).catch((err) => {
                 console.error(err)
-            })*/
+            })
             checkForLaunch()
             updateKube().then(success => {
                 if (mainWindow) {
@@ -594,7 +609,11 @@ launcher.on('data', (e) => {
         if (installCallback) {
             installCallback()
         } else if (store.has("quitOnLaunch") ? store.get("quitOnLaunch") : true) {
-            app.quit()
+            try {
+                mainWindow.close()
+            } catch (error) {
+
+            }
         }
     }
 });

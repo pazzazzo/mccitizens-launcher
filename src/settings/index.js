@@ -11,21 +11,21 @@ let modsList = document.getElementById("mods-list")
 let modFolder = document.getElementById("mod-folder")
 
 electronAPI.getMemory().then(m => {
-    m = Math.floor(Number(m.total)/10**9)
+    m = Math.floor(Number(m.total) / 10 ** 9)
     console.log(m);
-    
+
     maxRamInput.max = m
     minRamInput.max = m
 })
 electronAPI.getJavaOption().then(o => {
     console.log(o);
-    
+
     maxRamInput.value = o.maxRam
     minRamInput.value = o.minRam
 })
 electronAPI.getLauncherOption().then((o = {}) => {
     console.log(o);
-    
+
     if (Object.prototype.hasOwnProperty.call(o, "quitOnLaunch")) {
         if (!o.quitOnLaunch) {
             quitOnLaunchBtn.classList.remove("color-red")
@@ -49,11 +49,11 @@ quitOnLaunchBtn.addEventListener("click", () => {
     if (quitOnLaunchBtn.innerHTML === "Activer") {
         quitOnLaunchBtn.dataset.text = "Désactiver"
         quitOnLaunchBtn.innerHTML = "Désactiver"
-        electronAPI.setLauncherOption({"quitOnLaunch": true})
+        electronAPI.setLauncherOption({ "quitOnLaunch": true })
     } else {
         quitOnLaunchBtn.dataset.text = "Activer"
         quitOnLaunchBtn.innerHTML = "Activer"
-        electronAPI.setLauncherOption({"quitOnLaunch": false})
+        electronAPI.setLauncherOption({ "quitOnLaunch": false })
     }
     quitOnLaunchBtn.classList.toggle("color-red")
     quitOnLaunchBtn.classList.toggle("color-blue")
@@ -107,7 +107,53 @@ electronAPI.onNotConnected(() => {
 electronAPI.getModsData()
 electronAPI.onModData((data) => {
     console.log(data);
-    modsList.innerHTML += `<div class="mod-item"><img src="${data.logoBase64 ? `data:image/png;base64,${data.logoBase64}` : "../assets/images/placeholder.svg"}" width="32" height="32" alt="Mod Icon"><div class="mod-info"><div class="mod-name">${data.displayName}</div><div class="mod-version">v${data.version}</div></div><button class="color-red button-normal button-disabled button-large disable-mod" id="reset"data-text="Désactiver">Désactiver</button></div>`
+
+    const fragment = document.createDocumentFragment();
+    const modItem = document.createElement('div');
+    modItem.classList.add('mod-item');
+    const img = document.createElement('img');
+    img.width = 32;
+    img.height = 32;
+    img.alt = 'Mod Icon';
+    if (data.logoBase64) {
+        img.src = `data:image/png;base64,${data.logoBase64}`;
+    } else {
+        img.src = '../assets/images/placeholder.svg';
+    }
+    modItem.appendChild(img);
+
+    const modInfo = document.createElement('div');
+    modInfo.classList.add('mod-info');
+
+    const modName = document.createElement('div');
+    modName.classList.add('mod-name');
+    
+    modName.textContent = data.displayName;
+
+    const modVersion = document.createElement('div');
+    modVersion.classList.add('mod-version');
+    modVersion.textContent = `v${data.version}`;
+
+    modInfo.append(modName, modVersion);
+    modItem.appendChild(modInfo);
+
+    const disableButton = document.createElement('button');
+    disableButton.classList.add(
+        'color-red',
+        'button-normal',
+        'button-disabled',
+        'button-large',
+        'disable-mod'
+    );
+    disableButton.id = 'reset';
+    
+    disableButton.dataset.text = 'Désactiver';
+    disableButton.textContent = 'Désactiver';
+    modItem.appendChild(disableButton);
+
+    
+    fragment.appendChild(modItem);
+    modsList.appendChild(fragment);
 })
 
 modFolder.addEventListener("click", () => {

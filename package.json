@@ -1,6 +1,6 @@
 {
   "name": "mccitizens-launcher",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "description": "A launcher for MCCitizens",
   "main": "main.js",
   "scripts": {
@@ -43,6 +43,7 @@
     },
     "files": [
       "src/**/*",
+      "workers/*",
       "node_modules/**/*",
       "package.json",
       "*.js",

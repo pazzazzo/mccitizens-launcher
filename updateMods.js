@@ -20,15 +20,15 @@ function getLocalMods() {
     return fs.readdirSync(LOCAL_MODS_DIR).map(name => {
         let stats = fs.statSync(path.join(LOCAL_MODS_DIR, name))
         let size = stats.size;
-        return {name, size}
+        return { name, size }
     })
 }
 
 // Fonction pour obtenir la liste des fichiers sur GitHub
 async function getRemoteMods() {
     const response = await axios.get(GITHUB_API_URL);
-    
-    return response.data.map(file => {return {name: file.name, size: file.size}});
+
+    return response.data.map(file => { return { name: file.name, size: file.size } });
 }
 
 // Fonction pour télécharger un fichier
@@ -65,16 +65,19 @@ async function updateMods(cb) {
         const localMods = getLocalMods();
         const remoteMods = await getRemoteMods();
         console.log(remoteMods);
-        
+
 
         // Identifier les mods à supprimer
         const modsToDelete = localMods.filter(mod => !remoteMods.some(rmod => (mod.name === rmod.name && mod.size === rmod.size)));
 
         // Supprimer les mods obsolètes
         for (const mod of modsToDelete) {
-            cb({ "type": "delete", "file": mod, "index": modsToDelete.indexOf(mod) + 1, "total": modsToDelete.length })
-            fs.unlinkSync(path.join(LOCAL_MODS_DIR, mod.name));
-            console.log(`Deleted: ${mod.name}`);
+            let modStat = fs.statSync(path.join(LOCAL_MODS_DIR, mod.name))
+            if (!modStat.isDirectory()) {
+                cb({ "type": "delete", "file": mod, "index": modsToDelete.indexOf(mod) + 1, "total": modsToDelete.length })
+                fs.unlinkSync(path.join(LOCAL_MODS_DIR, mod.name));
+                console.log(`Deleted: ${mod.name}`);
+            }
         }
 
         // Identifier les mods à télécharger
