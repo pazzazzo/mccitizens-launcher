@@ -1,5 +1,5 @@
 require("colors")
-const { app, BrowserWindow, ipcMain, dialog, Notification } = require('electron')
+const { app, BrowserWindow, ipcMain, dialog, Notification, shell } = require('electron')
 const path = require('path')
 const { Client } = require("minecraft-launcher-core");
 const { Auth } = require("msmc");
@@ -21,6 +21,7 @@ const isClientPackageInstalled = require("./isClientPackageInstalled");
 const { default: axios } = require("axios");
 const updateServer = require("./updateServer");
 console.log(app.getPath('userData'));
+let state = "disconnected"
 
 let mainWindow;
 let profile;
@@ -100,22 +101,27 @@ ipcMain.on("auto_connect", (e) => {
             let mc = await xboxManager.getMinecraft();
             profile = mc.profile
             e.reply("connected", { "skin": profile.skins[0].url, "cape": profile.capes[0]?.url, "head": `https://mc-heads.net/head/${profile.name}/left` }, { "username": profile.name })
+            if (state !== "launch") state = "ready"
             xbox = xboxManager
         }).catch(r => {
             e.reply("not_connected")
+            state = "disconnected"
             console.log(r);
         })
     } else if (profile) {
         e.reply("connected", { "skin": profile.skins[0].url, "cape": profile.capes[0]?.url, "head": `https://mc-heads.net/head/${profile.name}/left` }, { "username": profile.name })
+        if (state !== "launch") state = "ready"
     } else if (xbox) {
         xbox.getMinecraft().then(mc => {
             profile = mc.profile
             e.reply("connected", { "skin": profile.skins[0].url, "cape": profile.capes[0]?.url, "head": `https://mc-heads.net/head/${profile.name}/left` }, { "username": profile.name })
+            if (state !== "launch") state = "ready"
         }).catch(e => {
             console.log(e);
         })
     } else {
         e.reply("not_connected")
+        state = "disconnected"
     }
 })
 ipcMain.on("connect", (e) => {
@@ -127,6 +133,7 @@ ipcMain.on("connect", (e) => {
         let mc = await xboxManager.getMinecraft();
         profile = mc.profile
         e.reply("connected", { "skin": profile.skins[0].url, "cape": profile.capes[0]?.url, "head": `https://mc-heads.net/head/${profile.name}/left` }, { "username": profile.name })
+        if (state !== "launch") state = "ready"
         xbox = xboxManager
     }).catch(r => {
         console.log(r);
@@ -140,6 +147,9 @@ ipcMain.handle("getServerIp", async (event) => {
     const r = await axios.get("https://raw.githubusercontent.com/pazzazzo/mccitizens-clientpackage/main/ip.txt")
     updateServer(r.data)
     return r.data
+})
+ipcMain.handle("getPlayState", async (event) => {
+    return state
 })
 ipcMain.handle("getServerStatus", (event, address, port = 25565) => {
     if (port == null || port == '') {
@@ -166,14 +176,16 @@ ipcMain.handle("getServerStatus", (event, address, port = 25565) => {
                 let server_info = data.toString().split('\x00\x00\x00')
                 const NUM_FIELDS = 6
                 if (server_info != null && server_info.length >= NUM_FIELDS) {
-                    resolve({
+                    let res = {
                         online: true,
                         version: server_info[2].replace(/\u0000/g, ''),
                         motd: server_info[3].replace(/\u0000/g, ''),
                         onlinePlayers: server_info[4].replace(/\u0000/g, ''),
-                        maxPlayers: server_info[5].replace(/\u0000/g, '')
-                    })
-                    console.log(server_info);
+                        maxPlayers: server_info[5].replace(/\u0000/g, ''),
+                        dataLength: server_info.length
+                    }
+                    resolve(res)
+                    console.log(res);
                 } else {
                     resolve({
                         online: false
@@ -216,17 +228,21 @@ ipcMain.handle("java.option.get", (e) => {
     }
 })
 ipcMain.on("mods.get", (event) => {
-    fs.readdir(path.join(rootPath(), "mods"), (err, files) => {
+    fs.existsSync(path.join(rootPath(), "mods")) && fs.readdir(path.join(rootPath(), "mods"), (err, files) => {
         files.forEach(file => {
-            event.reply("mod.post", getFabricModData(path.join(rootPath(), "mods", file)))
+            event.reply("mod.post", getModData(path.join(rootPath(), "mods", file)))
         })
     })
     fs.existsSync(path.join(rootPath(), "disabled-mods")) && fs.readdir(path.join(rootPath(), "mods"), (err, files) => {
         files.forEach(file => {
-            event.reply("mod.post", getFabricModData(path.join(rootPath(), "mods", file)))
+            event.reply("mod.post", getModData(path.join(rootPath(), "disabled-mods", file)))
         })
     })
 })
+ipcMain.on("mods.open.folder", (event) => {
+    shell.openPath(path.join(rootPath(), "mods"))
+})
+
 
 ipcMain.on("launcher.option.set", (event, config) => {
     if (Object.prototype.hasOwnProperty.call(config, "quitOnLaunch")) {
@@ -242,7 +258,9 @@ ipcMain.handle("launcher.option.get", (e) => {
 ipcMain.on("profile.load", (event) => {
     let userProfile = path.join(os.homedir(), "curseforge", "minecraft", "Instances", profile?.name || "")
     console.log(userProfile);
-    
+    if (!fs.existsSync(userProfile)) {
+        userProfile = path.join(os.homedir(), "curseforge", "minecraft", "Instances")
+    }
     if (!fs.existsSync(userProfile)) {
         userProfile = AppData
     }
@@ -320,6 +338,7 @@ ipcMain.on("launch-fabric", async () => {
     if (!xbox) {
         return
     }
+    state = "launch"
     let token = await xbox.getMinecraft();
     console.log(`[MCCitizens] Client package ${(isClientPackageInstalled) ? "already" : "not"} installed`);
     function launch() {
@@ -393,13 +412,14 @@ ipcMain.on("launch-fabric", async () => {
                     }
                 }).then(r => {
                     if (r.success) {
-                        console.log("a");
-
-                        installMCVersion({ "version": "1.21.5" }, () => {
-                            installCallback = null;
-                            mcSession.kill()
-                            store.set("installed", true)
-                            launch()
+                        mainWindow.webContents.send("update.server")
+                        axios.get("https://raw.githubusercontent.com/pazzazzo/mccitizens-clientpackage/main/ip.txt").then(r => {
+                            updateServer(r.data)
+                            mainWindow.webContents.send("update.server.ok")
+                            installMCVersion({ "version": "1.21.5" }, () => {
+                                store.set("installed", true)
+                                launch()
+                            })
                         })
                     } else if (mainWindow) {
                         mainWindow.webContents.send("java.install.error", r.error)
@@ -428,9 +448,12 @@ ipcMain.on("launch", async () => {
     if (!xbox) {
         return
     }
+
+    state = "launch"
     let token = await xbox.getMinecraft();
     console.log(`[MCCitizens] Client package ${(isClientPackageInstalled) ? "already" : "not"} installed`);
 
+    /** @type {import("minecraft-launcher-core").ILauncherOptions} */
     let opts = {
         clientPackage: (isClientPackageInstalled) ? null : "https://github.com/pazzazzo/mccitizens-clientpackage/releases/latest/download/clientpackage.zip",
         removePackage: true,
@@ -446,6 +469,7 @@ ipcMain.on("launch", async () => {
             min: `${store.get("minRam") || 4}G`
         },
         javaPath: path.join(rootPath(), 'java', 'jdk-17.0.11', 'bin', 'java'),
+        customLaunchArgs: ["--hydix-token=testing"],
         forge: rootPath() + "/forge.jar"
     };
     function checkClientPackage(cb) {
@@ -512,8 +536,13 @@ ipcMain.on("launch", async () => {
     }
     checkJava(() => {
         checkClientPackage(() => {
-            console.log("Starting!");
-            launcher.launch(opts);
+            mainWindow.webContents.send("update.server")
+            axios.get("https://raw.githubusercontent.com/pazzazzo/mccitizens-clientpackage/main/ip.txt").then(r => {
+                updateServer(r.data)
+                mainWindow.webContents.send("update.server.ok")
+                console.log("Starting!");
+                launcher.launch(opts);
+            })
         })
     })
 
@@ -521,7 +550,11 @@ ipcMain.on("launch", async () => {
 
 async function installMCVersion(opt = {}, cb) {
     installStep = opt.step
-    installCallback = cb
+    installCallback = () => {
+        installCallback = null;
+        mcSession.kill()
+        cb()
+    }
     let token = await xbox.getMinecraft();
     let opts = {
         clientPackage: null,

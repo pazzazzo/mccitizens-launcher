@@ -48,17 +48,11 @@
                             stroke-linecap="round"></path>
                     </svg>
                 </div>
-                <div class="card-body">
+                <div class="card-body" id="card-body">
                     <p class="progress-text" id="progress-task">
-                        Task: download
+                        Task: initialisation
                     </p>
                     <span class="progress-status"><span id="progress-percent">0</span>% Complete</span>
-                    <p class="progress-text" id="progress-text">
-                        File: ? extracting..
-                    </p>
-                    <div class="progress-bar-container">
-                        <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -68,7 +62,7 @@
                 </div>
                 <div class="status">Mojang <span id="status-mojang" class="material-symbols-outlined">check</span></div>
             </div>
-            <button class="color-green button-normal button-enabled button-large play" id="play"
+            <button class="color-green button-normal button-disabled button-large play" id="play"
                 data-text="Jouer">Jouer</button>
             <canvas id="skin" height="200" width="150"></canvas>
         </div>

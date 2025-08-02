@@ -13,9 +13,13 @@ let MAX_RETRIES = 10;
 let RETRY_DELAY = 2000;
 
 const jdkUrls = {
-    win32: 'https://download.oracle.com/java/21/archive/jdk-21_windows-x64_bin.zip',
-    darwin: 'https://download.oracle.com/java/21/archive/jdk-21_macos-x64_bin.tar.gz',
-    linux: 'https://download.oracle.com/java/21/archive/jdk-21_linux-x64_bin.tar.gz'
+    // win32: 'https://download.oracle.com/java/21/archive/jdk-21_windows-x64_bin.zip',
+    // darwin: 'https://download.oracle.com/java/21/archive/jdk-21_macos-x64_bin.tar.gz',
+    // linux: 'https://download.oracle.com/java/21/archive/jdk-21_linux-x64_bin.tar.gz'
+
+    win32: 'https://download.oracle.com/java/17/archive/jdk-17.0.11_windows-x64_bin.zip',
+    darwin: 'https://download.oracle.com/java/17/archive/jdk-17.0.11_macos-x64_bin.tar.gz',
+    linux: 'https://download.oracle.com/java/17/archive/jdk-17.0.11_linux-x64_bin.tar.gz'
 };
 
 // Chemins
@@ -109,7 +113,8 @@ async function installJDK(cb) {
 
         console.log(`Downloading JDK from ${jdkUrl}`);
         await downloadFile(jdkUrl, downloadPath, cb);
-
+        cb(100)
+        
         if (platform === 'win32') {
             console.log('Extracting JDK (ZIP)');
             await extractZip(downloadPath, downloadDir);

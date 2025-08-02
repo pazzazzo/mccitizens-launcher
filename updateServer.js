@@ -7,11 +7,11 @@ const rootPath = require('./rootPath');
 
 
 async function updateServer(ip) {
-    if (!fs.existsSync(rootPath(), 'servers.dat')) {
+    const filePath = path.join(rootPath(), 'servers.dat');
+    if (!fs.existsSync(filePath)) {
         return
     }
     const NBT = await import('nbtify');
-    const filePath = path.join(rootPath(), 'servers.dat');
 
     // Lecture du fichier server.dat (gzipped NBT)
     fs.readFile(filePath, async (err, data) => {

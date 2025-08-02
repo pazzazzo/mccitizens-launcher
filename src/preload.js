@@ -20,6 +20,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
     launchFabric: () => ipcRenderer.send("launch-fabric"),
     getStatus: (address, port = 25565) => ipcRenderer.invoke("getServerStatus", address, port),
     getIP: () => ipcRenderer.invoke("getServerIp"),
+    getPlayState: () => ipcRenderer.invoke("getPlayState"),
     getMemory: () => ipcRenderer.invoke("getMemory"),
     getVersion: () => app.getVersion(),
     setJavaOption: (config) => ipcRenderer.send("java.option.set", config),
@@ -28,7 +29,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
     getLauncherOption: () => ipcRenderer.invoke("launcher.option.get"),
     loadProfile: () => ipcRenderer.send("profile.load"),
     onLoadProfileStatus: (callback) => ipcRenderer.on("profile.load.status", (event, ...args) => callback(...args)),
-    
+    openModFolder: () => ipcRenderer.send("mods.open.folder"),
 })
 
 contextBridge.exposeInMainWorld("popup", {

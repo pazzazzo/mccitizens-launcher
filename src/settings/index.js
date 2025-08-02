@@ -8,6 +8,7 @@ let javaSaveBtn = document.getElementById("java-save")
 let loadProfileBtn = document.getElementById("loadProfile")
 let quitOnLaunchBtn = document.getElementById("quit-on-launch")
 let modsList = document.getElementById("mods-list")
+let modFolder = document.getElementById("mod-folder")
 
 electronAPI.getMemory().then(m => {
     m = Math.floor(Number(m.total)/10**9)
@@ -102,16 +103,13 @@ electronAPI.onConnected((url, player) => {
 electronAPI.onNotConnected(() => {
     location = "../login/index.html"
 })
-electronAPI.onDownloadStatus(() => {
-    
-})
-
-electronAPI.getStatus("193.250.155.77").then(r => {
-    console.log(r);
-})
 
 electronAPI.getModsData()
 electronAPI.onModData((data) => {
     console.log(data);
-    modsList.innerHTML += `<div class="mod-item"><img src="${data.logoBase64 ? `data:image/png;base64,${data.logoBase64}` : "../assets/images/placeholder.svg"}" width="32" height="32" alt="Mod Icon"><div class="mod-info"><div class="mod-name">${data.name}</div><div class="mod-version">v${data.version}</div></div><button class="color-red button-normal button-disabled button-large disable-mod" id="reset"data-text="Désactiver">Désactiver</button></div>`
+    modsList.innerHTML += `<div class="mod-item"><img src="${data.logoBase64 ? `data:image/png;base64,${data.logoBase64}` : "../assets/images/placeholder.svg"}" width="32" height="32" alt="Mod Icon"><div class="mod-info"><div class="mod-name">${data.displayName}</div><div class="mod-version">v${data.version}</div></div><button class="color-red button-normal button-disabled button-large disable-mod" id="reset"data-text="Désactiver">Désactiver</button></div>`
+})
+
+modFolder.addEventListener("click", () => {
+    electronAPI.openModFolder()
 })

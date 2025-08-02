@@ -1,6 +1,6 @@
 {
   "name": "mccitizens-launcher",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "description": "A launcher for MCCitizens",
   "main": "main.js",
   "scripts": {
@@ -8,7 +8,7 @@
     "test": "electron . --trace-warnings",
     "clearstore": "node clearStore.js",
     "dist": "electron-builder",
-    "dist:win": "npm run dist -- --win"
+    "dist:win": "electron-builder --win"
   },
   "author": {
     "name": "Hydix",
@@ -41,6 +41,14 @@
     "directories": {
       "output": "dist"
     },
+    "files": [
+      "src/**/*",
+      "node_modules/**/*",
+      "package.json",
+      "*.js",
+      "!**/*.md",
+      "!*.png"
+    ],
     "publish": [
       {
         "provider": "github",
@@ -64,7 +72,7 @@
     }
   },
   "devDependencies": {
-    "electron": "^32.0.1",
+    "electron": "^36.1.0",
     "electron-builder": "^24.13.3"
   }
 }

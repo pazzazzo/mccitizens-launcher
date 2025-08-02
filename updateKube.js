@@ -15,7 +15,7 @@ async function downloadLatestRelease() {
         // Obtenir les informations sur la dernière release
         const releaseResponse = await axios.get(GITHUB_RELEASE_API_URL);
         const zipAsset = releaseResponse.data.assets.find(asset => asset.name === 'kubejs.zip');
-        
+
         if (!zipAsset) {
             throw new Error('Release asset kubejs.zip not found.');
         }
@@ -39,9 +39,9 @@ async function downloadLatestRelease() {
 // Fonction pour extraire le fichier ZIP
 async function extractZip() {
     try {
-        await fs.createReadStream(TEMP_ZIP_PATH)
-            .pipe(unzipper.Extract({ path: rootPath() }))
-            .promise();
+
+        const directory = await unzipper.Open.file(TEMP_ZIP_PATH);
+        await directory.extract({ path: path.join(rootPath()) });
 
         console.log('Extraction completed.');
     } catch (error) {
@@ -74,7 +74,7 @@ async function syncKubejs() {
         await extractZip();
 
         // Supprimer le fichier ZIP temporaire
-        fs.unlinkSync(TEMP_ZIP_PATH);
+        // fs.unlinkSync(TEMP_ZIP_PATH);
         console.log('Temporary ZIP file deleted.');
 
         console.log('kubejs synchronization complete.');

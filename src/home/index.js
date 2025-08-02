@@ -16,13 +16,27 @@ playBtn.addEventListener("click", () => {
         state = "launch"
         playBtn.classList.remove("button-enabled")
         playBtn.classList.add("button-disabled")
-        electronAPI.launchFabric()
+        electronAPI.launch()
+        startPopup.classList.remove("hidden")
+    }
+})
+
+electronAPI.getPlayState().then(s => {
+    state = s
+    if (state === "ready") {
+        playBtn.classList.add("button-enabled")
+        playBtn.classList.remove("button-disabled")
+    } else if (state === "launch") {
+        playBtn.classList.remove("button-enabled")
+        playBtn.classList.add("button-disabled")
         startPopup.classList.remove("hidden")
     }
 })
 
 electronAPI.onConnected((url, player) => {
-    state = "ready"
+    if (state !== "launch") state = "ready"
+    playBtn.classList.add("button-enabled")
+    playBtn.classList.remove("button-disabled")
     console.log(url);
     document.getElementById("skin").classList.add("loaded")
     document.getElementById("user-icon").src = url.head
@@ -52,9 +66,46 @@ electronAPI.onConnected((url, player) => {
 electronAPI.onNotConnected(() => {
     location = "../login/index.html"
 })
+const files = new Set()
+const finishedFiles = new Set()
+const cardBody = document.getElementById("card-body")
+const epsilon = 0.05
+function updateFileExtract(name, status) {
+    let progressBar
+    if (!files.has(name) && !finishedFiles.has(name) && Math.floor(status * 100) < 100) {
+        files.add(name)
+        const progressText = document.createElement("p")
+        progressText.classList.add("progress-text")
+        progressText.id = "progress-text-" + name
+        progressText.innerText = `File: ${name} extracting..`
+
+        const pC = document.createElement("div")
+        pC.classList.add("progress-bar-container")
+
+        progressBar = document.createElement("div")
+        progressBar.classList.add("progress-bar")
+        progressBar.id = "progress-bar-" + name
+
+        pC.appendChild(progressBar)
+        cardBody.appendChild(progressText)
+        cardBody.appendChild(pC)
+    } else if (files.has(name) && Math.floor(status * 100) < 100) {
+        progressBar = document.getElementById("progress-bar-" + name)
+        
+    } else {
+        if (files.has(name)) {
+            files.delete(name)
+            finishedFiles.add(name)
+            document.getElementById("progress-text-" + name).remove()
+            document.getElementById("progress-bar-" + name).parentElement.remove()
+        }
+        return
+    }
+    progressBar.style.width = `${status * 100}%`
+}
+
 electronAPI.onDownloadStatus((e) => {
-    progressBar.style.width = `${Math.floor(e.current / e.total * 100)}%`
-    progressText.innerText = `File: ${e.name} extracting..`
+    updateFileExtract(e.name, e.current / e.total)
 })
 
 electronAPI.onProgressStatus((e) => {
@@ -65,25 +116,19 @@ electronAPI.onProgressStatus((e) => {
 electronAPI.onModsSyncProgress((e) => {
     progressPercent.innerText = Math.floor(e.index / e.total * 100)
     progressTask.innerText = `Task: mod ${e.type}`
-    progressText.innerText = `File: ${e.file} extracting..`
-    if (e.percent) {
-        progressBar.style.width = `${e.percent}%`
-    } else {
-        progressBar.style.width = `0%`
-    }
+    updateFileExtract(e.type, (e.percent || 0) / 100)
 })
 
 electronAPI.onJavaInstallProgress((e) => {
     progressPercent.innerText = Math.floor(e)
-    progressTask.innerText = `Task: java install`
-    progressText.innerText = `File: JDK extracting..`
-    progressBar.style.width = `${e}%`
+    progressTask.innerText = `Task: JDK install`
+
+    updateFileExtract("JDK", e / 100)
 })
 electronAPI.onClientInstallProgress((e) => {
     progressPercent.innerText = Math.floor(e)
-    progressTask.innerText = `Task: client install`
-    progressText.innerText = `File: Client extracting..`
-    progressBar.style.width = `${e}%`
+    progressTask.innerText = `Task: Client install`
+    updateFileExtract("Client", e / 100)
 })
 
 electronAPI.getIP().then(res => {

@@ -19,8 +19,8 @@ function getFabricModData(jarFilePath) {
                 console.log('Version du mod :', version);
                 console.log('Fichier logo :', icon);
 
-                // Convertir le logo en Base64 si un logoFile est spécifié
-                if (logoFile) {
+                // Convertir le logo en Base64 si un icon est spécifié
+                if (icon) {
                     const logoBase64 = extractAndConvertLogoToBase64(zip, icon);
                     return {...modInfo, logoBase64}
                 }
