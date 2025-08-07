@@ -9,7 +9,7 @@ parentPort.on('message', ({ dirs }) => {
     const files = fs.readdirSync(dir);
     for (const file of files) {
       const data = getModData(path.join(dir, file));
-      parentPort.postMessage(data);
+      data && parentPort.postMessage(data);
     }
   }
   parentPort.postMessage(null);

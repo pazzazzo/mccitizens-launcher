@@ -1,11 +1,7 @@
-const { contextBridge, ipcRenderer, app } = require('electron')
+const { contextBridge, ipcRenderer, webUtils } = require('electron')
 
 contextBridge.exposeInMainWorld("electronAPI", {
-    autoConnect: () => ipcRenderer.send("auto_connect"),
-    connect: () => ipcRenderer.send("connect"),
     reset: () => ipcRenderer.send("reset"),
-    onConnected: (callback) => ipcRenderer.on("connected", (event, ...args) => callback(...args)),
-    onNotConnected: (callback) => ipcRenderer.on("not_connected", (event, ...args) => callback(...args)),
     onDownloadStatus: (callback) => ipcRenderer.on("download.status", (event, ...args) => callback(...args)),
     onProgressStatus: (callback) => ipcRenderer.on("progress.status", (event, ...args) => callback(...args)),
     onModsSyncProgress: (callback) => ipcRenderer.on("mods.sync.progress", (event, ...args) => callback(...args)),
@@ -17,19 +13,20 @@ contextBridge.exposeInMainWorld("electronAPI", {
     getModsData: () => ipcRenderer.send("mods.get"),
     onModData: (callback) => ipcRenderer.on("mod.post", (event, ...args) => callback(...args)),
     launch: () => ipcRenderer.send("launch"),
-    launchFabric: () => ipcRenderer.send("launch-fabric"),
-    getStatus: (address, port = 25565) => ipcRenderer.invoke("getServerStatus", address, port),
-    getIP: () => ipcRenderer.invoke("getServerIp"),
-    getPlayState: () => ipcRenderer.invoke("getPlayState"),
+    getGames: () => ipcRenderer.invoke("getGames"),
+    setGame: (game) => ipcRenderer.send("setGame", game),
     getMemory: () => ipcRenderer.invoke("getMemory"),
-    getVersion: () => app.getVersion(),
     setJavaOption: (config) => ipcRenderer.send("java.option.set", config),
     getJavaOption: () => ipcRenderer.invoke("java.option.get"),
     setLauncherOption: (config) => ipcRenderer.send("launcher.option.set", config),
     getLauncherOption: () => ipcRenderer.invoke("launcher.option.get"),
-    loadProfile: () => ipcRenderer.send("profile.load"),
+    loadProfile: (pth) => ipcRenderer.send("profile.load", pth),
     onLoadProfileStatus: (callback) => ipcRenderer.on("profile.load.status", (event, ...args) => callback(...args)),
+    onServerStatus: (callback) => ipcRenderer.on("server.status", (event, data) => callback(data)),
+    getServerStatus: () => ipcRenderer.send("server.status"),
+    onStateChange: (callback) => ipcRenderer.on("state.change", (event, state) => callback(state)),
     openModFolder: () => ipcRenderer.send("mods.open.folder"),
+    getPath: (file) => webUtils.getPathForFile(file),
 })
 
 contextBridge.exposeInMainWorld("popup", {
@@ -54,5 +51,8 @@ contextBridge.exposeInMainWorld("popup", {
 })
 
 document.addEventListener("DOMContentLoaded", async () => {
-    document.getElementById("version").innerText = await ipcRenderer.invoke("getVersion")
+    let ver = await ipcRenderer.invoke("getVersion")
+    document.querySelectorAll(".version").forEach(e => {
+        e.innerText = ver
+    })
 })

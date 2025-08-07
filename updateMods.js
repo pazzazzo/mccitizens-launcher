@@ -84,15 +84,76 @@ async function updateMods(cb) {
         const modsToDownload = remoteMods.filter(mod => !localMods.some(lmod => (mod.name === lmod.name && mod.size === lmod.size)));
 
         // Télécharger les nouveaux mods
-        for (const mod of modsToDownload) {
-            cb({ "type": "download", "file": mod.name, "index": modsToDownload.indexOf(mod.name) + 1, "total": modsToDownload.length })
+        const concurrencyLimit = 3;
+        let activeCount = 0;
+        let passedCount = 0;
+        let currentIndex = 0;
+
+        async function next() {
+            // Si on a traité tous les mods à télécharger...
+            if (currentIndex >= modsToDownload.length) {
+                // ...et qu'il n'en reste aucun en cours, on termine.
+                if (activeCount === 0) {
+                    return;
+                }
+                // Sinon on attend la fin des en cours.
+                return;
+            }
+
+            // Si on est déjà à la limite de concurrence, on recule
+            if (activeCount >= concurrencyLimit) {
+                return;
+            }
+
+            // On récupère le mod suivant
+            const mod = modsToDownload[currentIndex];
+            currentIndex++;
+            activeCount++;
+
+            // Callback de départ à 0%
+            typeof cb === 'function' && cb({
+                type: 'download',
+                file: mod.name,
+                percent: 0
+            });
+
             const fileUrl = `https://raw.githubusercontent.com/pazzazzo/mccitizens-clientpackage/main/mods/${mod.name}`;
             const destPath = path.join(LOCAL_MODS_DIR, mod.name);
-            await downloadFile(fileUrl, destPath, (p) => {
-                cb({ "type": "download", "file": mod.name, "index": modsToDownload.indexOf(mod.name) + 1, "total": modsToDownload.length, "percent": p })
-            });
-            console.log(`Downloaded: ${mod.name}`);
+
+            try {
+                // On attend la fin du téléchargement avant de continuer
+                await downloadFile(fileUrl, destPath, (p) => {
+                    typeof cb === 'function' && cb({
+                        type: 'download',
+                        file: mod.name,
+                        total: modsToDownload.length,
+                        percent: p
+                    });
+                });
+                console.log(`Downloaded: ${mod.name}`);
+            } catch (err) {
+                console.error(`Erreur sur ${mod.name}:`, err);
+            } finally {
+                // Une fois terminé (succès ou échec), on libère une place
+                activeCount--;
+                passedCount++;
+                typeof cb === 'function' && cb({
+                    type: 'download',
+                    index: passedCount,
+                    total: modsToDownload.length,
+                });
+                // Et on lance le prochain téléchargement si besoin
+                await next();
+            }
         }
+
+
+        const starters = [];
+        for (let i = 0; i < concurrencyLimit; i++) {
+            starters.push(next());
+        }
+
+        await Promise.all(starters);
 
         console.log('Mods synchronization complete.');
         return true

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            width: 100vw;
+            background: transparent;
+        }
+
+        div {
+            background: #00000000 url("./assets/images/wallpaper.jpg") center center/cover no-repeat;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            border-radius: 50px;
+        }
+
+        div>div {
+            border-radius: 50px;
+            background: color-mix(in oklab, #000000 60%, transparent);
+            backdrop-filter: blur(5px);
+            position: absolute;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        img {
+            animation: rotate 2s ease 0s infinite normal forwards;
+            height: 60vh;
+        }
+
+        @keyframes rotate {
+
+            0% {
+                transform: rotate(90deg);
+            }
+
+            100% {
+                transform: rotate(270deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+        <div>
+            <img src="./assets/load/app_load.svg" alt="">
+        </div>
+    </div>
+</body>
+
+</html>

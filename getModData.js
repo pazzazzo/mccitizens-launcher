@@ -1,10 +1,12 @@
 const AdmZip = require('adm-zip');
 const toml = require('toml');
 const fs = require('fs');
-const path = require('path');
 
 function getModData(jarFilePath) {
     try {
+        if (fs.statSync(jarFilePath).isDirectory()) {
+            return
+        }
         // Chargement du fichier .jar
         const zip = new AdmZip(jarFilePath);
 
@@ -19,10 +21,7 @@ function getModData(jarFilePath) {
             // Récupération des informations souhaitées
             const modInfo = parsedToml.mods ? parsedToml.mods[0] : null;
             if (modInfo) {
-                const { displayName, version, logoFile } = modInfo;
-                console.log('Nom du mod :', displayName);
-                console.log('Version du mod :', version);
-                console.log('Fichier logo :', logoFile);
+                const { logoFile } = modInfo;
 
                 // Convertir le logo en Base64 si un logoFile est spécifié
                 if (logoFile) {

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- <meta http-equiv="Content-Security-Policy" content="script-src 'self';"> -->
+    <title>MCCitizens</title>
+</head>
+
+<body>
+    <div id="filter"></div>
+    <div id="views">
+        <div class="view active" id="main-view">
+            <div id="sidebar">
+                <div id="sidebar-profile">
+                    <div id="sidebar-profile-button">
+                        <img src="./assets/load/head_load.png" alt="Tête du joueur" id="sidebar-profile-icon">
+                        <div id="sidebar-profile-text">
+                            <p id="sidebar-profile-name">PlayerName</p>
+                            <p>Compte MCCitizens</p>
+                        </div>
+                    </div>
+                </div>
+                <div id="sidebar-menu">
+                    <div role="button" class="sidebar-menu-button selected" data-select="main">
+                        <i data-lucide="house"></i>
+                        <p>Accueil</p>
+                    </div>
+                    <div role="button" class="sidebar-menu-button" data-select="news">
+                        <i data-lucide="newspaper"></i>
+                        <p>Journal</p>
+                    </div>
+                    <div role="button" class="sidebar-menu-button" data-select="gallery">
+                        <i data-lucide="images"></i>
+                        <p>Gallerie</p>
+                    </div>
+                    <div role="button" class="sidebar-menu-button" data-select="settings">
+                        <i data-lucide="settings-2"></i>
+                        <p>Paramètres</p>
+                    </div>
+                </div>
+                <div id="sidebar-footer">
+                    <p>MCCitizens Launcher v<span class="version">0.0.0</span></p>
+                    <p>Région: <span class="region">Europe</span></p>
+                </div>
+            </div>
+            <main>
+                <section id="main-page" class="active">
+                    <div id="main-title">
+                        <img src="./assets/logo/title.png" alt="Minecraft MCCitizens Edition">
+                    </div>
+                    <div id="main-content"></div>
+                    <div id="main-utils">
+                        <div>
+                            <div id="server-status">
+                                <div id="server-status-indicator" class="off"></div>
+                                <span id="server-status-players">0</span>
+                                <p>joueurs connectés</p>
+                            </div>
+                            <div id="game-selector">
+                                <select name="game" id="game-selector-input">
+                                </select>
+                                <div id="game-selector-site">
+                                    <i data-lucide="globe"></i>
+                                </div>
+                            </div>
+                            <button class="color-blue button-normal button-enabled button-large" id="game-play"
+                                data-text="Jouer">Jouer</button>
+                        </div>
+                    </div>
+                    <canvas id="skin" height="200" width="150"></canvas>
+                </section>
+                <section id="news-page">
+                    <div class="news">
+                        <div class="news-header">
+                            <div class="news-icon">
+                                <i data-lucide="globe"></i>
+                            </div>
+                            <div class="news-data">
+                                <h1>Nouvelle mise à jour du serveur</h1>
+                                <div class="news-data-row">
+                                    <p class="news-data-tag">Nouveauté</p>
+                                    <div class="news-data-date">
+                                        <i data-lucide="calendar"></i>
+                                        <p>01/08/2025</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="news-resume">Découvrez les nouvelles fonctionnalités ajoutées au serveur MCCitizens.
+                        </p>
+                    </div>
+                </section>
+                <div id="gallery-page">
+                    
+                </div>
+                <section id="settings-page">
+                    <div id="settings-list">
+                        <div class="settings" id="ram-settings">
+                            <h1>Allocation mémoire (RAM)</h1>
+                            <p>Mémoire allouée: <span id="settings-min-ram">1</span>GB - <span
+                                    id="settings-max-ram">1</span>GB</p>
+                        </div>
+                        <div class="settings">
+                            <h1>Import de configuration</h1>
+                            <div class="directory-input" id="settings-import-btn">
+                                <div>
+                                    <i data-lucide="folder-open"></i>
+                                    <p>Séléctionner un dossier</p>
+                                    <p>Ou glissez-déposez ici</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="settings">
+                            <h1>Paramètres généraux</h1>
+                            <div class="settings-row">
+                                <p>Fermer le launcher au démarrage du jeu</p>
+                                <input type="checkbox" name="" id="settings-close-launcher" class="switch">
+                            </div>
+                        </div>
+                        <div class="settings">
+                            <h1>Liste des mods</h1>
+                            <div id="settings-mods">
+                                
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+        <div class="view" id="popup-view">
+            <div class="popup hidden" id="launch-popup">
+                <h1>Game launching</h1>
+                <p class="progress-task">Task: <span id="progress-task-type">Initialization</span></p>
+                <span class="progress-status"><span id="progress-task-percent">0</span>% Complete</span>
+            </div>
+            <div class="popup hidden" id="profile-popup">
+                <h1>Profile importation</h1>
+                <div class="logs" id="profile-logs">
+                    <p>Hydix File System ...</p>
+                </div>
+                <button class="color-blue button-normal button-enabled button-wide button-disabled" id="profile-close"
+                    data-text="Fermer">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="./index.js" type="module"></script>
+    <script src="./settings.js" type="module"></script>
+    <script src="./modules/skinview3d/bundles/skinview3d.bundle.js"></script>
+    <!-- <script src="./index.js"></script> -->
+</body>
+
+</html>
