@@ -81,6 +81,8 @@ electronAPI.onStateChange((state) => {
     } else {
         popupView.classList.remove("active")
         launchPopup.classList.add("hidden")
+        files.clear()
+        finishedFiles.clear()
     }
 })
 

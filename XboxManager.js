@@ -15,7 +15,6 @@ class XboxManager extends EventEmitter {
         super()
         this.msAuthToken = store.get("token") || {}
         this.xbox
-        this.state
         this.store = store
         this.authManager = new Auth("select_account");
     }
@@ -66,6 +65,11 @@ class XboxManager extends EventEmitter {
         return this.#state
     }
 
+
+    /**
+     * Change l'état.
+     * @param {"disconnected"|"launch"|"launched"|"ready"} v - Nouvel état autorisé
+     */
     set state(v) {
         this.emit("state", v)
         this.#state = v

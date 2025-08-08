@@ -1,7 +1,7 @@
 /* eslint-disable no-control-regex */
 let startTime = performance.now()
 require("colors")
-const { app, BrowserWindow, ipcMain, shell } = require('electron')
+const { app, BrowserWindow, ipcMain, shell, Menu, Tray } = require('electron')
 const { Client } = require("minecraft-launcher-core");
 const { autoUpdater } = require('electron-updater');
 const childProcess = require('child_process');
@@ -11,6 +11,9 @@ const path = require('path')
 const net = require('net')
 const os = require("os")
 const fs = require("fs");
+const log = require("electron-log/main")
+Object.assign(console, log.functions);
+
 require("dotenv").config({ path: path.join(__dirname, ".env.prod"), quiet: true })
 
 const isDev = require("./isdev")
@@ -36,6 +39,15 @@ let store = new Store()
 let xboxManager = new XboxManager(store)
 let liveServer
 let serverIP
+
+/** @type {childProcess.ChildProcessWithoutNullStreams | null} */
+let minecraftProc = null;
+
+/** @type {Menu} */
+let contextMenu;
+
+/** @type {Tray} */
+let appTray
 
 const launcher = new Client();
 
@@ -138,6 +150,41 @@ autoUpdater.on('download-progress', (progressObj) => {
     }
 });
 
+function buildTray() {
+    contextMenu = Menu.buildFromTemplate([
+        { label: 'Ouvrir', type: 'normal' },
+        { type: 'separator' },
+        { label: 'Fermer Minecraft', type: 'normal', enabled: (xboxManager.state === "launch" || xboxManager.state === "launched") },
+        { label: 'Quitter', type: 'normal', role: "quit" },
+    ])
+
+    contextMenu.items.forEach((btn, i) => {
+        btn.click = () => {
+            switch (i) {
+                case 0:
+                    if (mainWindow) {
+                        if (!mainWindow.isDestroyed() && mainWindow.isMinimized()) mainWindow.restore()
+                        mainWindow.focus()
+                    } else {
+                        createWindow()
+                    }
+                    break;
+                case 2:
+                    if (minecraftProc && xboxManager.state === "launched" || xboxManager.state === "launch") {
+                        minecraftProc.kill("SIGKILL")
+                    }
+                    break;
+                case 3:
+                    app.quit()
+                    break;
+                default:
+                    break;
+            }
+        }
+    })
+    appTray.setContextMenu(contextMenu)
+}
+
 const gotTheLock = app.requestSingleInstanceLock()
 if (!gotTheLock) {
     app.quit()
@@ -152,7 +199,7 @@ if (!gotTheLock) {
         }
         console.log("hey:", commandLine, wd, ad);
         console.log(process.argv);
-        
+
     })
 
     app.whenReady().then(() => {
@@ -178,6 +225,10 @@ if (!gotTheLock) {
             })
         })
         console.log(process.argv);
+
+        appTray = new Tray(path.join(__dirname, "src", "assets", "icons", "icon_64.png"))
+        appTray.setToolTip("MCCitizens")
+        buildTray()
     })
 }
 
@@ -211,9 +262,9 @@ ipcMain.on("server.status", async (e) => {
 
 async function updateIP() {
     try {
-        const r = await fetch("https://raw.githubusercontent.com/pazzazzo/mccitizens-clientpackage/main/ip.txt")
+        const r = await fetch("https://raw.githubusercontent.com/pazzazzo/mccitizens-clientpackage/refs/heads/main/ip.txt")
         if (r.ok) {
-            serverIP = await r.text()
+            serverIP = (await r.text()).replace(/\n/g, "")
             updateServer(serverIP)
             return true
         }
@@ -224,57 +275,62 @@ async function updateIP() {
 }
 
 function fetchServerStatus() {
-    let [address, port] = serverIP.split(":")
-    if (!port) {
-        port = 25565
-    }
-    if (typeof port === 'string') {
-        port = parseInt(port)
-    }
+    const connectTimeoutMs = 10000
+    const idleTimeoutMs = 12000
+    let [address, port] = serverIP.split(":");
+    port = port ? parseInt(port, 10) : 25565;
 
     return new Promise((resolve) => {
-        const socket = net.connect(port, address, () => {
-            let buff = Buffer.from([0xFE, 0x01])
-            socket.write(buff)
-        })
+        let settled = false;
+        const settle = (val) => {
+            if (settled) return;
+            settled = true;
+            try { socket.destroy(); } catch { /* empty */ }
+            clearTimeout(connectTimer);
+            resolve(val);
+        };
 
-        socket.setTimeout(2500, () => {
-            socket.end()
-            resolve({
-                online: false
-            })
-        })
+        const socket = net.connect({ host: address, port });
 
-        socket.on('data', (data) => {
-            if (data != null && data != '') {
-                let server_info = data.toString().split('\x00\x00\x00')
-                const NUM_FIELDS = 6
-                if (server_info != null && server_info.length >= NUM_FIELDS) {
-                    let res = {
-                        online: true,
-                        version: server_info[2].replace(/\u0000/g, ''),
-                        motd: server_info[3].replace(/\u0000/g, ''),
-                        onlinePlayers: server_info[4].replace(/\u0000/g, ''),
-                        maxPlayers: server_info[5].replace(/\u0000/g, ''),
-                        dataLength: server_info.length
-                    }
-                    resolve(res)
-                } else {
-                    resolve({
-                        online: false
-                    })
-                }
+        // Timeout si la connexion n’est jamais établie
+        const connectTimer = setTimeout(() => {
+            settle({ online: false, reason: 'connect-timeout' });
+        }, connectTimeoutMs);
+
+        socket.once('connect', () => {
+            // Maintenant seulement on met un idle-timeout
+            socket.setTimeout(idleTimeoutMs);
+            // Legacy ping (vieux protocol) – peut ne plus marcher sur des serveurs récents
+            socket.write(Buffer.from([0xFE, 0x01]));
+        });
+
+        socket.once('timeout', () => {
+            settle({ online: false, reason: 'idle-timeout' });
+        });
+
+        socket.once('error', (err) => {
+            settle({ online: false, error: err && (err.code || err.message) });
+        });
+
+        socket.once('data', (data) => {
+            if (!data || !data.length) return settle({ online: false, reason: 'empty-response' });
+
+            // Parsing "legacy" 0xFE response
+            const parts = data.toString().split('\x00\x00\x00');
+            if (parts && parts.length >= 6) {
+                const res = {
+                    online: true,
+                    version: parts[2]?.replace(/\u0000/g, ''),
+                    motd: parts[3]?.replace(/\u0000/g, ''),
+                    onlinePlayers: parts[4]?.replace(/\u0000/g, ''),
+                    maxPlayers: parts[5]?.replace(/\u0000/g, ''),
+                    dataLength: parts.length
+                };
+                return settle(res);
             }
-            socket.end()
-        })
-
-        socket.on('error', (err) => {
-            console.log(err);
-            resolve({
-                online: false
-            })
-        })
-    })
+            settle({ online: false, reason: 'unexpected-format' });
+        });
+    });
 }
 
 ipcMain.handle("getMemory", () => {
@@ -373,7 +429,7 @@ ipcMain.on("mods.get", (event) => {
                 resolve();
                 worker.terminate();
             } else {
-                event.sender.send('mod.post', modData);
+                mainWindow && event.sender.send('mod.post', modData);
             }
         });
 
@@ -498,9 +554,9 @@ ipcMain.on("launch", async () => {
     }
     checkJava(() => {
         checkClientPackage(() => {
-            updateIP().then(() => {
+            updateIP().then(async () => {
                 console.log("Starting!");
-                launcher.launch(opts);
+                minecraftProc = await launcher.launch(opts);
             })
         })
     })
@@ -511,29 +567,32 @@ xboxManager.on("state", (s) => {
     if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send("state.change", s)
     }
+    buildTray()
 })
 
-launcher.on('debug', (e) => {
-    console.log("[" + "DEGUB".cyan + "] " + e)
-});
+// launcher.on('debug', (e) => {
+//     console.log("[" + "DEGUB".cyan + "] " + e)
+// });
 launcher.on('data', (e) => {
-    console.log("[" + "DATA".green + "] " + e)
+    // console.log("[" + "DATA".green + "] " + e)
 
     if ((e.indexOf("Building Processors") >= 0 || e.indexOf("[Render thread/INFO]") >= 0)) {
+        xboxManager.state = "launched"
         if (store.has("quitOnLaunch") ? store.get("quitOnLaunch") : true) {
             try {
-                // mainWindow.close()
+                mainWindow.close()
                 // eslint-disable-next-line no-unused-vars
             } catch (e) { /* empty */ }
         }
     }
 });
-launcher.on("close", (c) => {
+launcher.on("close", (c, sig) => {
     xboxManager.state = "ready"
-    console.log(`minecraft exit (${c})`);
+    minecraftProc = null
+    console.log(`minecraft exit (code: ${c} sig: ${sig})`);
 })
 launcher.on("progress", (e) => {
-    console.log('[' + 'PROGRESS'.yellow + '] ', e); //task/total
+    // console.log('[' + 'PROGRESS'.yellow + '] ', e);
 
     if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send("progress.status", e)
@@ -541,13 +600,13 @@ launcher.on("progress", (e) => {
 })
 launcher.on("package-extract", () => {
     store.set("installed", process.env.INSTALL_REV)
-    console.log('[' + 'PACKAGE EXTRACTED'.green + ']');
+    // console.log('[' + 'PACKAGE EXTRACTED'.green + ']');
 })
-launcher.on("download", (e) => {
-    console.log('[' + 'DOWNLOAD'.magenta + '] ', e);
-})
+// launcher.on("download", (e) => {
+//     console.log('[' + 'DOWNLOAD'.magenta + '] ', e);
+// })
 launcher.on("download-status", (e) => {
-    console.log('[' + 'DOWNLOAD-STATUS'.cyan + '] ', e);
+    // console.log('[' + 'DOWNLOAD-STATUS'.cyan + '] ', e);
 
     if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send("download.status", e)
