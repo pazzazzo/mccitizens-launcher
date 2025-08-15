@@ -1,0 +1,20 @@
+.ui-tooltip{
+  position:fixed; z-index:var(--tip-z);
+  background:var(--tip-bg); color:var(--tip-fg);
+  padding:var(--tip-pad); border-radius:var(--tip-radius);
+  font-size:var(--tip-fz); line-height:1.2; max-width:var(--tip-maxw);
+  box-shadow:var(--tip-shadow); pointer-events:none;
+  opacity:0; transform: translate3d(0,0,0) scale(.98);
+  transition: opacity .12s ease, transform .12s ease;
+  will-change: transform;
+}
+.ui-tooltip.show{ opacity:1; transform: translate3d(0,0,0) scale(1); }
+.ui-tooltip .arrow{
+  position:absolute; width:0; height:0;
+  border:6px solid transparent;
+}
+/* Orientation des flèches */
+.ui-tooltip.place-top    .arrow{ border-top-color:var(--tip-bg); bottom:-12px; left:calc(50% - 6px); }
+.ui-tooltip.place-bottom .arrow{ border-bottom-color:var(--tip-bg); top:-12px;   left:calc(50% - 6px); }
+.ui-tooltip.place-left   .arrow{ border-left-color:var(--tip-bg);  right:-12px;  top:calc(50% - 6px); }
+.ui-tooltip.place-right  .arrow{ border-right-color:var(--tip-bg); left:-12px;   top:calc(50% - 6px); }
