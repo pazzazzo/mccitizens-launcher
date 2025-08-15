@@ -1,7 +1,7 @@
 /* eslint-disable no-control-regex */
 let startTime = performance.now()
 require("colors")
-const { app, BrowserWindow, ipcMain, shell, Menu, Tray } = require('electron')
+const { app, BrowserWindow, ipcMain, desktopCapturer, shell, Menu, Tray, session } = require('electron')
 const { Client } = require("minecraft-launcher-core");
 const { autoUpdater } = require('electron-updater');
 const childProcess = require('child_process');
@@ -21,7 +21,7 @@ const rootPath = require("./rootPath");
 const updateMods = require("./updateMods");
 const updateKube = require("./updateKube");
 const installJDK = require("./installJDK");
-const XboxManager = require("./XboxManager");
+const SessionManager = require("./SessionManager");
 const loadProfile = require("./loadProfile");
 const updateServer = require("./updateServer");
 const isClientPackageInstalled = require("./isClientPackageInstalled");
@@ -36,7 +36,7 @@ let mainWindow;
 /** @type {BrowserWindow} */
 let loadWindow;
 let store = new Store()
-let xboxManager = new XboxManager(store)
+let sessionManager = new SessionManager(store)
 let liveServer
 let serverIP
 
@@ -75,7 +75,7 @@ const createWindow = () => {
     })
     mainWindow.loadFile(path.join(__dirname, "src", "index.html"), {
         query: {
-            payload: encodeURIComponent(JSON.stringify(xboxManager.playerData))
+            payload: encodeURIComponent(JSON.stringify(sessionManager.playerData))
         }
     })
     mainWindow.on("ready-to-show", () => {
@@ -122,7 +122,7 @@ autoUpdater.on('update-available', () => {
     if (mainWindow) {
         mainWindow.loadFile(path.join(__dirname, "src", "update", "index.html"), {
             query: {
-                payload: encodeURIComponent(JSON.stringify(xboxManager.playerData))
+                payload: encodeURIComponent(JSON.stringify(sessionManager.playerData))
             }
         })
     }
@@ -154,7 +154,7 @@ function buildTray() {
     contextMenu = Menu.buildFromTemplate([
         { label: 'Ouvrir', type: 'normal' },
         { type: 'separator' },
-        { label: 'Fermer Minecraft', type: 'normal', enabled: (xboxManager.state === "launch" || xboxManager.state === "launched") },
+        { label: 'Fermer Minecraft', type: 'normal', enabled: (sessionManager.state === "launch" || sessionManager.state === "launched") },
         { label: 'Quitter', type: 'normal', role: "quit" },
     ])
 
@@ -170,7 +170,7 @@ function buildTray() {
                     }
                     break;
                 case 2:
-                    if (minecraftProc && xboxManager.state === "launched" || xboxManager.state === "launch") {
+                    if (minecraftProc && sessionManager.state === "launched" || sessionManager.state === "launch") {
                         minecraftProc.kill("SIGKILL")
                     }
                     break;
@@ -202,9 +202,12 @@ if (!gotTheLock) {
 
     })
 
-    app.whenReady().then(() => {
+    app.whenReady().then(async () => {
         createLoadWindow()
-        xboxManager.autoConnect().then(() => {
+        try {
+            await sessionManager.hydix.autoConnect()
+        } catch { /* empty */ }
+        sessionManager.autoConnect().then(() => {
             createWindow()
             app.on('activate', () => {
                 if (BrowserWindow.getAllWindows().length === 0) createWindow()
@@ -213,7 +216,7 @@ if (!gotTheLock) {
             console.log("Can't autoconnect: ", rej);
             loadWindow && loadWindow.closable && loadWindow.close()
             loadWindow = null
-            xboxManager.connectModal().then(() => {
+            sessionManager.connectModal().then(() => {
                 createLoadWindow()
                 createWindow()
                 app.on('activate', () => {
@@ -224,11 +227,18 @@ if (!gotTheLock) {
                 // app.quit()
             })
         })
-        console.log(process.argv);
 
         appTray = new Tray(path.join(__dirname, "src", "assets", "icons", "icon_64.png"))
         appTray.setToolTip("MCCitizens")
         buildTray()
+
+        session.defaultSession.setDisplayMediaRequestHandler((req, callback) => {
+            desktopCapturer.getSources({
+                types: ["screen"]
+            }).then(s => {
+                callback({ video: s[0], audio: 'loopback' })
+            })
+        })
     })
 }
 
@@ -239,6 +249,20 @@ app.on('window-all-closed', () => {
 ipcMain.on("reset", () => {
     store.clear()
     app.quit()
+})
+
+ipcMain.on("hydix.connect", async (e) => {
+    sessionManager.hydix.autoConnect().then((v) => {
+        e.reply("hydix.status", v)
+    }).catch(() => {
+        sessionManager.hydix.connect().then(v => {
+            console.log(v);
+            e.reply("hydix.status", v)
+        }).catch(r => {
+            console.error(r);
+            e.reply("hydix.status", r)
+        })
+    })
 })
 
 ipcMain.on("server.status", async (e) => {
@@ -378,14 +402,14 @@ ipcMain.on("setGame", (event, game) => {
             wait: 1000,
             logLevel: 2,
         });
-        mainWindow.loadURL("http://localhost:5500/index.html?payload=" + encodeURIComponent(JSON.stringify(xboxManager.playerData)))
+        mainWindow.loadURL("http://localhost:5500/index.html?payload=" + encodeURIComponent(JSON.stringify(sessionManager.playerData)))
     } else {
         if (liveServer) {
             liveServer.shutdown()
             liveServer = null
             mainWindow.loadFile(path.join(__dirname, "src", "index.html"), {
                 query: {
-                    payload: encodeURIComponent(JSON.stringify(xboxManager.playerData))
+                    payload: encodeURIComponent(JSON.stringify(sessionManager.playerData))
                 }
             })
         }
@@ -458,18 +482,18 @@ ipcMain.handle("launcher.option.get", () => {
 })
 
 ipcMain.on("profile.load", (event, profile_path) => {
-    loadProfile(event, profile_path, mainWindow, xboxManager)
+    loadProfile(event, profile_path, mainWindow, sessionManager)
 })
 
 ipcMain.on("launch", async () => {
-    if (xboxManager.state !== "ready") {
+    if (sessionManager.state !== "ready") {
         return
     }
 
     mainWindow.webContents.send("")
 
-    xboxManager.state = "launch"
-    let token = await xboxManager.getMinecraft();
+    sessionManager.state = "launch"
+    let token = await sessionManager.getMinecraft();
     console.log(`[MCCitizens] Client package ${(isClientPackageInstalled) ? "already" : "not"} installed`);
 
     /** @type {import("minecraft-launcher-core").ILauncherOptions} */
@@ -563,7 +587,7 @@ ipcMain.on("launch", async () => {
 
 })
 
-xboxManager.on("state", (s) => {
+sessionManager.on("state", (s) => {
     if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send("state.change", s)
     }
@@ -577,7 +601,7 @@ launcher.on('data', (e) => {
     // console.log("[" + "DATA".green + "] " + e)
 
     if ((e.indexOf("Building Processors") >= 0 || e.indexOf("[Render thread/INFO]") >= 0)) {
-        xboxManager.state = "launched"
+        sessionManager.state = "launched"
         if (store.has("quitOnLaunch") ? store.get("quitOnLaunch") : true) {
             try {
                 mainWindow.close()
@@ -587,7 +611,7 @@ launcher.on('data', (e) => {
     }
 });
 launcher.on("close", (c, sig) => {
-    xboxManager.state = "ready"
+    sessionManager.state = "ready"
     minecraftProc = null
     console.log(`minecraft exit (code: ${c} sig: ${sig})`);
 })
