@@ -102,8 +102,6 @@ electronAPI.getLauncherOption().then((opts) => {
 })
 electronAPI.getModsData()
 electronAPI.onModData(d => {
-    console.log(d);
-    
     let required = true
     // Container principal
     const modEl = document.createElement("div");
