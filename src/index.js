@@ -3,6 +3,8 @@ lucide.createIcons();
 /* Section */
 const sidebarMenuButtons = document.querySelectorAll(".sidebar-menu-button")
 const sections = document.querySelectorAll("section")
+const sidebarProfileAccount = document.getElementById("sidebar-profile-account")
+const sidebarProfileButton = document.getElementById("sidebar-profile-button")
 /* Main */
 const gameSelector = document.getElementById("game-selector-input")
 const skinCanevas = document.getElementById("skin")
@@ -13,6 +15,7 @@ const serverStatusIndicator = document.getElementById("server-status-indicator")
 /* Popup */
 const popupView = document.getElementById("popup-view")
 const launchPopup = document.getElementById("launch-popup")
+const hydixPopup = document.getElementById("hydix-popup")
 
 /* ======================================================================================================= */
 
@@ -37,6 +40,13 @@ if (raw) {
     profile = JSON.parse(decodeURIComponent(raw));
     document.getElementById("sidebar-profile-icon").src = profile.head
     document.getElementById("sidebar-profile-name").innerText = profile.username
+    if (profile.hydix) {
+        sidebarProfileAccount.classList.remove("warn")
+    } else {
+        popupView.classList.add("active")
+        hydixPopup.classList.remove("hidden")
+    }
+    
     let height = 200
     let skinViewer = new skinview3d.SkinViewer({
         canvas: skinCanevas,
@@ -64,6 +74,12 @@ if (raw) {
         launchPopup.classList.remove("hidden")
     }
 }
+electronAPI.onHydixStatus((state) => {
+    if (state && state.username) {
+        popupView.classList.remove("active")
+        hydixPopup.classList.add("hidden")
+    }
+})
 electronAPI.onStateChange((state) => {
     profile.state = state
     if (profile.state !== "ready") {
