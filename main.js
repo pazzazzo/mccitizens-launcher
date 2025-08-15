@@ -206,7 +206,9 @@ if (!gotTheLock) {
         createLoadWindow()
         try {
             await sessionManager.hydix.autoConnect()
-        } catch { /* empty */ }
+        } catch {
+            /* empty */
+        }
         sessionManager.autoConnect().then(() => {
             createWindow()
             app.on('activate', () => {
