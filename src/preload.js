@@ -22,6 +22,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
     getLauncherOption: () => ipcRenderer.invoke("launcher.option.get"),
     loadProfile: (pth) => ipcRenderer.send("profile.load", pth),
     onLoadProfileStatus: (callback) => ipcRenderer.on("profile.load.status", (event, ...args) => callback(...args)),
+    connectHydix: () => ipcRenderer.send("hydix.connect"),
+    onHydixStatus: (callback) => ipcRenderer.on("hydix.status", (event, ...args) => callback(...args)),
     onServerStatus: (callback) => ipcRenderer.on("server.status", (event, data) => callback(data)),
     getServerStatus: () => ipcRenderer.send("server.status"),
     onStateChange: (callback) => ipcRenderer.on("state.change", (event, state) => callback(state)),
