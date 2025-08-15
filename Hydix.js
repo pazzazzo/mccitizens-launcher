@@ -25,14 +25,22 @@ class Hydix {
                     'Accept': 'application/json'
                 },
                 method: "GET"
-            });
-            const r = await res.json()
-            if (res.ok) {
-                this.profile = r
-                console.log(r);
-                
+            }).catch((r) => {
+                if (r instanceof TypeError && r.message === "fetch failed") {
+                    throw "unresolvable"
+                }
+                throw r
+            })
+            if (res) {
+                const r = await res.json()
+                if (res.ok) {
+                    this.profile = r
+                    console.log(r);
+                }
+                return r
+            } else {
+                throw "no_response"
             }
-            return r
         }
     }
 
