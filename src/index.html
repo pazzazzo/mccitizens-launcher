@@ -20,7 +20,7 @@
                         <img src="./assets/load/head_load.png" alt="Tête du joueur" id="sidebar-profile-icon">
                         <div id="sidebar-profile-text">
                             <p id="sidebar-profile-name">PlayerName</p>
-                            <p>Compte MCCitizens</p>
+                            <p id="sidebar-profile-account">Compte MCCitizens</p>
                         </div>
                     </div>
                 </div>
@@ -145,11 +145,19 @@
                 <button class="color-blue button-normal button-enabled button-wide button-disabled" id="profile-close"
                     data-text="Fermer">Fermer</button>
             </div>
+            <div class="popup hidden" id="hydix-popup">
+                <h1>Non connecté</h1>
+                <p>Vous n'êtes pas connecté à Hydix</p>
+                <p>Pour jouer à MCCitizens, votre compte doit être lié à Hydix</p>
+                <button class="color-blue button-normal button-enabled button-wide" id="hydix-connect"
+                    data-text="Se connecter" onclick="electronAPI.connectHydix()">Se connecter</button>
+            </div>
         </div>
     </div>
 
     <script src="./index.js" type="module"></script>
     <script src="./settings.js" type="module"></script>
+    <script type="module" src="./tooltips.js"></script>
     <script src="./modules/skinview3d/bundles/skinview3d.bundle.js"></script>
     <!-- <script src="./index.js"></script> -->
 </body>
