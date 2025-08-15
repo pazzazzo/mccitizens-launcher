@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');
 @import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200");
+@import url("./tooltip.css");
 
 @font-face {
   font-family: 'Minecraft';
@@ -47,6 +48,16 @@
 
   --popup: #0000001f;
   --popup-dark: #050505a4;
+
+  --tip-bg: #111;
+  --tip-fg: #fff;
+  --tip-radius: 8px;
+  --tip-gap: 10px;
+  --tip-pad: 8px 10px;
+  --tip-maxw: 260px;
+  --tip-shadow: 0 8px 30px rgba(0, 0, 0, .25);
+  --tip-z: 9999;
+  --tip-fz: 12px;
 }
 
 #filter {
@@ -202,7 +213,6 @@ button {
 #sidebar-profile-icon {
   height: 60px;
   margin-right: 1rem;
-  border-radius: 50%;
 }
 
 #sidebar-profile-text {
@@ -215,15 +225,27 @@ button {
   margin: 0;
 }
 
-#sidebar-profile-text>p:first-child {
+#sidebar-profile-name {
   font-size: 1.3rem;
   font-weight: 700;
 }
 
-#sidebar-profile-text>p:last-child {
+#sidebar-profile-account {
   font-size: 1rem;
   font-weight: 400;
   color: var(--disabled-color);
+}
+
+#sidebar-profile-account.warn {
+  color: var(--orange-color) !important;
+  text-decoration: line-through solid;
+  font-weight: 600;
+}
+
+#sidebar-profile-account.disabled {
+  color: var(--disabled-color);
+  text-decoration: line-through solid;
+  font-weight: 600;
 }
 
 #sidebar-menu {
