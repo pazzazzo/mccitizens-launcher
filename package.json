@@ -1,6 +1,6 @@
 {
   "name": "mccitizens-launcher",
-  "version": "0.0.18",
+  "version": "0.0.21",
   "description": "A launcher for MCCitizens",
   "main": "main.js",
   "scripts": {
@@ -29,6 +29,7 @@
     "msmc": "^5.0.5",
     "nbtify": "^2.2.0",
     "net": "^1.0.2",
+    "open": "^10.2.0",
     "portfinder": "^1.0.37",
     "request": "^2.88.2",
     "skinview3d": "^3.0.0-alpha.1",

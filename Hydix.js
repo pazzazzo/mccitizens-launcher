@@ -2,6 +2,7 @@ const { spawn } = require('child_process');
 const portfinder = require("portfinder")
 const crypto = require('crypto');
 const http = require("http");
+const open = require('open').default;
 
 class Hydix {
     /**
@@ -15,6 +16,8 @@ class Hydix {
     }
     async autoConnect() {
         let hydixToken = this.store.get("hydixToken")
+        console.log(hydixToken);
+
         if (!hydixToken) {
             throw "no_token"
         } else {
@@ -163,7 +166,7 @@ class Hydix {
             }, 180000);
 
             // Ouvrir le navigateur une fois que le serveur écoute
-            this.openInBrowser(syncUrl);
+            open(syncUrl);
 
             // Nettoyage du timer si jamais resolve/reject appelé
             const _resolve = resolve;
@@ -173,16 +176,6 @@ class Hydix {
         });
         this.store.set("hydixToken", token)
         return await this.autoConnect();
-    }
-
-    openInBrowser(url) {
-        const cmd = process.platform === 'darwin'
-            ? 'open'
-            : process.platform === 'win32'
-                ? 'cmd'
-                : 'xdg-open';
-        const args = process.platform === 'win32' ? ['/c', 'start', '', url] : [url];
-        spawn(cmd, args, { stdio: 'ignore', detached: true }).unref();
     }
 
     makePkce() {

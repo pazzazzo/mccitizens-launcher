@@ -492,15 +492,15 @@ ipcMain.on("launch", async () => {
         return
     }
 
-    mainWindow.webContents.send("")
+    // mainWindow.webContents.send("")
 
     sessionManager.state = "launch"
     let token = await sessionManager.getMinecraft();
-    console.log(`[MCCitizens] Client package ${(isClientPackageInstalled) ? "already" : "not"} installed`);
+    console.log(`[MCCitizens] Client package ${(isClientPackageInstalled()) ? "already" : "not"} installed`);
 
     /** @type {import("minecraft-launcher-core").ILauncherOptions} */
     let opts = {
-        clientPackage: (isClientPackageInstalled) ? null : "https://github.com/pazzazzo/mccitizens-clientpackage/releases/latest/download/clientpackage.zip",
+        clientPackage: (isClientPackageInstalled()) ? null : "https://github.com/pazzazzo/mccitizens-clientpackage/releases/latest/download/clientpackage.zip",
         removePackage: true,
         authorization: token.mclc(),
         root: rootPath(),
@@ -517,41 +517,43 @@ ipcMain.on("launch", async () => {
         forge: rootPath() + "/forge.jar"
     };
     function checkClientPackage(cb) {
-        if (isClientPackageInstalled) {
-            if (mainWindow) {
-                mainWindow.webContents.send("mods.sync.start")
-            }
-            let i = 0
-            function checkForLaunch() {
-                i++
-                if (i === 3) {
-                    cb()
-                }
-            }
-            updateMods((p) => {
-                if (mainWindow) {
-                    mainWindow.webContents.send("mods.sync.progress", p)
-                }
-            }).then(success => {
-                if (mainWindow) {
-                    mainWindow.webContents.send("mods.sync.end", success)
-                }
-                checkForLaunch()
-            }).catch((err) => {
-                console.error(err)
-            })
-            checkForLaunch()
-            updateKube().then(success => {
-                if (mainWindow) {
-                    mainWindow.webContents.send("kube.sync.end", success)
-                }
-                checkForLaunch()
-            }).catch((err) => {
-                console.error(err)
-            })
-        } else {
-            cb()
+        if (!fs.existsSync(rootPath())) {
+            fs.mkdirSync(rootPath())
         }
+        if (!fs.existsSync(path.join(rootPath(), "mods"))) {
+            fs.mkdirSync(path.join(rootPath(), "mods"))
+        }
+        if (mainWindow) {
+            mainWindow.webContents.send("mods.sync.start")
+        }
+        let i = 0
+        function checkForLaunch() {
+            i++
+            if (i === 3) {
+                cb()
+            }
+        }
+        updateMods((p) => {
+            if (mainWindow) {
+                mainWindow.webContents.send("mods.sync.progress", p)
+            }
+        }).then(success => {
+            if (mainWindow) {
+                mainWindow.webContents.send("mods.sync.end", success)
+            }
+            checkForLaunch()
+        }).catch((err) => {
+            console.error(err)
+        })
+        checkForLaunch()
+        updateKube().then(success => {
+            if (mainWindow) {
+                mainWindow.webContents.send("kube.sync.end", success)
+            }
+            checkForLaunch()
+        }).catch((err) => {
+            console.error(err)
+        })
     }
     function checkJava(cb) {
         if (!fs.existsSync(path.join(rootPath(), "java"))) {

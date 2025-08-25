@@ -26,6 +26,9 @@ class SessionManager extends EventEmitter {
             if (this.msAuthToken && this.msAuthToken["access_token"] && this.msAuthToken["refresh_token"] && !this.xbox) {
                 this.authManager.refresh(this.msAuthToken).then(async xboxManager => {
                     let mc = await xboxManager.getMinecraft();
+                    if (!mc?.profile) {
+                        return rej("no_mc")
+                    }
                     this.profile = mc.profile
                     res()
                     if (this.state !== "launch") this.state = "ready"
@@ -88,6 +91,9 @@ class SessionManager extends EventEmitter {
                 this.msAuthToken["refresh_token"] = xboxManager.msToken.refresh_token
                 this.store.set("token", this.msAuthToken)
                 let mc = await xboxManager.getMinecraft();
+                if (!mc?.profile) {
+                    return rej("no_mc")
+                }
                 this.profile = mc.profile
                 res()
                 if (this.state !== "launch") this.state = "ready"

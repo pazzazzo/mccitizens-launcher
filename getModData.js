@@ -4,11 +4,19 @@ const fs = require('fs');
 
 function getModData(jarFilePath) {
     try {
+        if (!fs.existsSync(jarFilePath)) {
+            return
+        }
         if (fs.statSync(jarFilePath).isDirectory()) {
             return
         }
         // Chargement du fichier .jar
-        const zip = new AdmZip(jarFilePath);
+        let zip
+        try {
+            zip = new AdmZip(jarFilePath);
+        } catch {
+            return
+        }
 
         // Recherche du fichier mods.toml dans META-INF
         const modsTomlEntry = zip.getEntry('META-INF/mods.toml');
@@ -26,9 +34,9 @@ function getModData(jarFilePath) {
                 // Convertir le logo en Base64 si un logoFile est spécifié
                 if (logoFile) {
                     const logoBase64 = extractAndConvertLogoToBase64(zip, logoFile);
-                    return {...modInfo, logoBase64}
+                    return { ...modInfo, logoBase64 }
                 }
-                return {...modInfo}
+                return { ...modInfo }
             }
         }
     } catch (error) {
