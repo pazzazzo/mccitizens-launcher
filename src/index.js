@@ -1,5 +1,5 @@
-
 lucide.createIcons();
+moment.locale('fr')
 /* Section */
 const sidebarMenuButtons = document.querySelectorAll(".sidebar-menu-button")
 const sections = document.querySelectorAll("section")

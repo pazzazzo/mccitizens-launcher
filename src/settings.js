@@ -77,7 +77,7 @@ profileClose.addEventListener("click", () => {
 })
 
 Promise.all([electronAPI.getMemory(), electronAPI.getJavaOption()]).then(([m, opts]) => {
-    let max = Math.floor(Number(m.total) / 10 ** 9)
+    let max = Math.floor(Number(m.total) / 2 ** 30)
     console.log(opts);
 
     const ramSlider = new DoubleSlider({

@@ -20,6 +20,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
     getJavaOption: () => ipcRenderer.invoke("java.option.get"),
     setLauncherOption: (config) => ipcRenderer.send("launcher.option.set", config),
     getLauncherOption: () => ipcRenderer.invoke("launcher.option.get"),
+    getScreens: () => ipcRenderer.invoke("screens.get"),
+    saveScreen: (pth) => ipcRenderer.invoke("screen.save", pth),
     loadProfile: (pth) => ipcRenderer.send("profile.load", pth),
     onLoadProfileStatus: (callback) => ipcRenderer.on("profile.load.status", (event, ...args) => callback(...args)),
     connectHydix: () => ipcRenderer.send("hydix.connect"),

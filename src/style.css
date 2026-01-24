@@ -89,6 +89,10 @@
     'opsz'48
 }
 
+img {
+  -webkit-user-drag: none;
+}
+
 body {
   margin: 0;
   background: var(--background-color) url("./assets/images/wallpaper.jpg") center center/cover no-repeat;
@@ -191,6 +195,7 @@ button {
   border-right: var(--border);
   display: flex;
   flex-direction: column;
+  width: 18.5rem;
 }
 
 #sidebar-profile {
@@ -291,7 +296,7 @@ main {
 
 section {
   height: 100%;
-  width: 100%;
+  width: calc(100vw - 18.5rem);
   display: none;
   padding: 2rem;
   flex-direction: column;
@@ -731,7 +736,8 @@ section.active {
 .switch::after {
   content: '';
   position: absolute;
-  top: 3px;
+  top: 50%;
+  transform: translateY(-50%);
   left: 3px;
   width: 24px;
   height: 24px;
@@ -746,7 +752,7 @@ section.active {
 }
 
 .switch:checked::after {
-  transform: translatex(20px);
+  transform: translate(20px, -50%);
   background: rgb(255, 255, 255);
 }
 
@@ -969,4 +975,76 @@ button.button-enabled:hover::before {
     transform: translate(-50%, -50%) scale(0);
     opacity: 0
   }
+}
+
+#gallery-page {
+  align-items: center;
+  justify-content: center;
+  background-color: var(--blackened-screen-color);
+  backdrop-filter: blur(5px);
+  height: 100%;
+}
+
+#gallery-page.active {
+  display: flex;
+}
+
+#gallery-viewer {
+  max-width: calc(100% - 2rem);
+  max-height: calc(100vh - 2rem);
+  position: relative;
+}
+
+#gallery-controls {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  left: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+}
+
+#gallery-controls > * {
+  background-color: var(--blackened-screen-color);
+  backdrop-filter: blur(5px);
+  border-radius: var(--border-radius);
+  padding: .5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all .2s ease;
+  border: var(--border);
+}
+
+#gallery-date {
+  position: absolute;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: .5rem 1rem;
+  font-size: 1.2rem;
+  color: var(--text-normal);
+  cursor: default;
+}
+
+#gallery-controls > * > svg{
+  height: 3rem;
+  width: 3rem;
+}
+
+#gallery-image {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: var(--border-radius);
+  border: var(--border);
+}
+
+#gallery-save {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
 }
